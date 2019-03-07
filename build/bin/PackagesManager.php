@@ -50,8 +50,6 @@ class PackagesManager
     {
         $info = json_decode (Requester::getRequest ('https://api.github.com/repos/'. $package), true);
 
-        pre ($info);
-
         if (!is_array ($info) || isset ($info['message']))
         {
             Printer::say ('Repository "'. $package .'" not founded. Skipping...');
