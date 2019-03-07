@@ -7,7 +7,7 @@ class Exception extends \Exception {}
 
 set_exception_handler (function ($exception)
 {
-    Printer::print ($exception->getMessage (), 2);
+    Printer::say ($exception->getMessage (), 2);
 });
 
 ?>

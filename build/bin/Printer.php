@@ -17,24 +17,27 @@ class Printer
      * 
      */
 
-    public static function print (string $message, int $state = 0): void
+    public static function say ($message, $state = 0)
     {
-        $message = str_replace ("\n", "\n ", $message);
-        
-        switch ($state)
+        if (defined ('STDOUT') && defined ('STDERR'))
         {
-            case 1:
-                fwrite (STDERR, ' [!] '. $message .PHP_EOL);
-            break;
+            $message = str_replace ("\n", "\n ", $message);
 
-            case 2:
-                fwrite (STDOUT, ' [*] '. $message .PHP_EOL);
-            break;
+            switch ($state)
+            {
+                case 1:
+                    fwrite (STDERR, ' [!] '. $message .PHP_EOL);
+                break;
 
-            case 0:
-            default:
-                fwrite (STDOUT, ' '. $message .PHP_EOL);
-            break;
+                case 2:
+                    fwrite (STDOUT, ' [*] '. $message .PHP_EOL);
+                break;
+
+                case 0:
+                default:
+                    fwrite (STDOUT, ' '. $message .PHP_EOL);
+                break;
+            }
         }
     }
 }

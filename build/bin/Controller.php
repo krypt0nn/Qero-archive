@@ -2,13 +2,11 @@
 
 namespace Qero\Controller;
 
-use Qero\{
-    Exceptions\Exception,
-    Printer\Printer,
-    PackagesManager\PackagesManager
-};
+use Qero\Exceptions\Exception;
+use Qero\Printer\Printer;
+use Qero\PackagesManager\PackagesManager;
 
-const QERO_FOOTER = '
+define ('QERO_FOOTER', '
 
       ___           ___           ___           ___     
      /\  \         /\  \         /\  \         /\  \    
@@ -26,12 +24,12 @@ const QERO_FOOTER = '
         vk.com/technomindlp
         vk.com/hphp_convertation
 
-     Version: '. \Qero\QERO_VERSION .'
+     Version: '. QERO_VERSION .'
 
 
-';
+');
 
-const QERO_HELP = '
+define ('QERO_HELP', '
 
     Qero.phar [command] [args]
     Example: Qero.phar install php-ai/php-ml
@@ -41,8 +39,9 @@ const QERO_HELP = '
         install [repos list]   - downloading requirement to the folder
         delete [packages list] - deleting installed packages
         update                 - updating (re-installing) all installed packages
+        packages               - print installed packages list
 
-';
+');
 
 class Controller
 {
@@ -53,7 +52,13 @@ class Controller
         $this->manager = new PackagesManager;
     }
 
-    public function executeCommand (array $args, int $argc = null): void
+    /**
+     * @param array $args
+     * @param int $argc
+     * 
+     */
+
+    public function executeCommand ($args, $argc = null)
     {
         if ($argc === null)
             $argc = sizeof ($args);
@@ -71,7 +76,7 @@ class Controller
                 foreach (array_slice ($args, 2) as $repository)
                     $this->manager->installPackage ($repository);
 
-                Printer::print ("\nInstalling complited");
+                Printer::say ("\nInstalling complited");
             break;
 
             case 'delete':
@@ -80,32 +85,39 @@ class Controller
 
                 foreach (array_slice ($args, 2) as $package)
                 {
-                    Printer::print ('Deleting "'. $package .'"...');
+                    Printer::say ('Deleting "'. $package .'"...');
 
                     $this->manager->deletePackage ($package);
                 }
 
-                Printer::print ("\nDeleting complited");
+                Printer::say ("\nDeleting complited");
             break;
 
             case 'update':
                 $this->manager->updatePackages ();
             break;
 
+            case 'packages':
+                if (isset ($this->manager->settings['packages']) && sizeof ($this->manager->settings['packages']) > 0)
+                    Printer::say ("Installed packages:\n\n". implode ("\n", array_keys ($this->manager->settings['packages'])));
+
+                else Printer::say ('No one package installed');
+            break;
+
             default:
-                Printer::print ('Using unknown command "'. $args[1] .'"', 2);
+                Printer::say ('Using unknown command "'. $args[1] .'"', 2);
             break;
         }
     }
 
-    public function printFooter (): void
+    public function printFooter ()
     {
-        Printer::print (QERO_FOOTER);
+        Printer::say (QERO_FOOTER);
     }
 
-    public function printHelp (): void
+    public function printHelp ()
     {
-        Printer::print (QERO_HELP);
+        Printer::say (QERO_HELP);
     }
 }
 

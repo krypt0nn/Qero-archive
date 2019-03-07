@@ -22,9 +22,9 @@
 
 namespace Qero;
 
-const QERO_VERSION = '2.2';
+define ('QERO_VERSION', '2.3');
 
-function dir_delete (string $path): bool
+function dir_delete ($path)
 {
     if (!is_dir ($path))
         return false;
@@ -45,7 +45,7 @@ function dir_delete (string $path): bool
     return true;
 }
 
-define ('QERO_DIR', dirname (substr (__DIR__, 7)));
+define ('QERO_DIR', dirname (substr (__DIR__, 0, 7) == 'phar://' ? substr (__DIR__, 7) : __DIR__));
 
 if (!is_dir (QERO_DIR .'/qero-packages'))
     mkdir (QERO_DIR .'/qero-packages');
@@ -53,19 +53,18 @@ if (!is_dir (QERO_DIR .'/qero-packages'))
 require 'bin/Printer.php';
 require 'bin/Exceptions.php';
 require 'bin/Controller.php';
+require 'bin/Requester.php';
 require 'bin/PackagesManager.php';
 
-use Qero\{
-    Printer\Printer,
-    Controller\Controller
-};
+use Qero\Printer\Printer;
+use Qero\Controller\Controller;
 
 $controller = new Controller;
 $controller->printFooter ();
 
 if ($argc == 1)
 {
-    Printer::print ('Parameters not selected. Help:', 2);
+    Printer::say ('Parameters not selected. Help:', 2);
 
     $controller->printHelp ();
 }
