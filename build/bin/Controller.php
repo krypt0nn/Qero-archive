@@ -37,7 +37,7 @@ define ('QERO_HELP', '
     Commands:
         help                   - print Qero commands list
         install [repos list]   - downloading requirement to the folder
-        delete [packages list] - deleting installed packages
+        delete [packages list] - deleting installed packages (with package source)
         update                 - updating (re-installing) all installed packages
         packages               - print installed packages list
 
@@ -53,8 +53,10 @@ class Controller
     }
 
     /**
-     * @param array $args
-     * @param int $argc
+     * Выполнение команды консоли
+     * 
+     * @param array $args - список аргументов консоли
+     * [@param int $argc = null] - кол-во аргументов
      * 
      */
 
@@ -110,10 +112,18 @@ class Controller
         }
     }
 
+    /**
+     * Вывод шапки программы
+     */
+
     public function printFooter ()
     {
         Printer::say (QERO_FOOTER);
     }
+
+    /**
+     * Вывод помощи (списка команд)
+     */
 
     public function printHelp ()
     {

@@ -22,7 +22,14 @@
 
 namespace Qero;
 
-define ('QERO_VERSION', '2.3');
+define ('QERO_VERSION', '2.4');
+
+/**
+ * Рекурсивное удаление директории и всех последующих директорий и файлов
+ * 
+ * @param string $path - директория для удаления
+ * 
+ */
 
 function dir_delete ($path)
 {
@@ -54,6 +61,10 @@ require 'bin/Printer.php';
 require 'bin/Exceptions.php';
 require 'bin/Controller.php';
 require 'bin/Requester.php';
+require 'sources/SourceInterface.php';
+require 'sources/GitHub.php';
+require 'sources/GitLab.php';
+require 'sources/BitBucket.php';
 require 'bin/PackagesManager.php';
 
 use Qero\Printer\Printer;

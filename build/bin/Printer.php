@@ -5,13 +5,13 @@ namespace Qero\Printer;
 class Printer
 {
     /**
-     * Print message to console
+     * Вывод сообщения в консоль
      * 
-     * @param string $message - message
-     * [@param int $state = 0] - type of message:
-     *   0 - default output
-     *   1 - info
-     *   2 - error
+     * @param string $message - сообщение
+     * [@param int $state = 0] - тип сообщения:
+     *   0 - стандартное
+     *   1 - информация
+     *   2 - ошибка
      * 
      *   default value: 0
      * 

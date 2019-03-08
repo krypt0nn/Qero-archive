@@ -15,14 +15,23 @@ define ('QERO_AUTOGENERATE', '
 
 class PackagesManager
 {
+    /**
+     * Массив настроек
+     */
     public $settings = array ();
 
+    /**
+     * Список индексов, которые будут парситься из файла "qero-info.json" в... "qero-info.json"
+     */
     protected $parse = array
     (
         'version',
         'entry_point'
     );
 
+    /**
+     * Список имён начальных файлов для подключение (в порядке понижения приоритета)
+     */
     protected $enteringPoints = array
     (
         'qero-init.php',
@@ -42,57 +51,97 @@ class PackagesManager
     }
 
     /**
-     * @param string $package
+     * Установка пакета
+     * 
+     * @param string $package - полное название пакета
+     * @return bool - возвращает статус установки пакета
      * 
      */
 
     public function installPackage ($package)
     {
-        $info = json_decode (Requester::getRequest ('https://api.github.com/repos/'. $package), true);
+        $packageInfo = $this->getPackageBlocks ($package);
 
-        if (!is_array ($info) || isset ($info['message']))
+        switch ($packageInfo['source'])
         {
-            Printer::say ('Repository "'. $package .'" not founded. Skipping...');
+            case 'github':
+                $source = 'Qero\Sources\GitHub\GitHub';
+            break;
+
+            case 'gitlab':
+                $source = 'Qero\Sources\GitLab\GitLab';
+            break;
+
+            case 'bitbucket':
+                $source = 'Qero\Sources\BitBucket\BitBucket';
+            break;
+
+            default:
+                Printer::say ('Source "'. $packageInfo['source'] .'" not founded. Skipping...', 2);
+            break;
+        }
+
+        $package = $packageInfo['full_name'];
+        $info    = $source::getPackageInfo ($package);
+
+        if (!is_array ($info))
+        {
+            Printer::say ('Repository "'. $package .'" not founded. Skipping...', 1);
 
             return false;
         }
 
         Printer::say ('Installing "'. $package .'"...');
 
-        $commit = json_decode (Requester::getRequest ('https://api.github.com/repos/'. $package .'/commits'), true);
-        $commit = $commit[0];
+        $commit = $source::getPackageCommit ($package);
 
-        \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $info['full_name']);
-        mkdir (QERO_DIR .'/qero-packages/'. $info['full_name'], 0777, true);
+        \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $package);
+        mkdir (QERO_DIR .'/qero-packages/'. $package, 0777, true);
 
-        file_put_contents (QERO_DIR .'/qero-packages/'. $info['full_name'] .'/branch.tar', Requester::getRequest ('https://api.github.com/repos/'. $package .'/tarball'));
+        file_put_contents (QERO_DIR .'/qero-packages/'. $package .'/branch.tar', $source::getPackageArchive ($package));
 
-        $archive = new \PharData (QERO_DIR .'/qero-packages/'. $info['full_name'] .'/branch.tar');
-        $archive->extractTo (QERO_DIR .'/qero-packages/'. $info['full_name']);
+        $archive = new \PharData (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
+        $archive->extractTo (QERO_DIR .'/qero-packages/'. $package);
+        unset ($archive);
+        \PharData::unlinkArchive (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
 
-        unlink (QERO_DIR .'/qero-packages/'. $info['full_name'] .'/branch.tar');
-
-        $this->registerNewPackage ($info['full_name'], $commit);
+        $source = explode ('\\', $source);
+        $source = end ($source);
+        $this->registerNewPackage ($package, $commit, strtolower ($source));
 
         return true;
     }
 
     /**
-     * @param string $package
-     * @param array $packageInfo
+     * Регистрация нового пакета в менеджере
+     * 
+     * @param string $package - полное название пакета
+     * @param array $packageInfo - информация о пакете
+     * [@param string $source = 'github'] - источник пакета
      * 
      */
 
-    public function registerNewPackage ($package, $packageInfo)
+    public function registerNewPackage ($package, $packageInfo, $source = 'github')
     {
-        $this->settings['packages'][$package] = array
+        $packagePath = $source .':'. $package;
+
+        foreach (array_slice (scandir (QERO_DIR .'/qero-packages/'. $package), 2) as $dir)
+            if (is_dir (QERO_DIR .'/qero-packages/'. $package .'/'. $dir))
+            {
+                $folder = $dir;
+
+                break;
+            }
+        
+        if (!isset ($folder))
+            $folder = str_replace ('/', '-', $package) .'-'. substr ($packageInfo['sha'], 0, 7);
+
+        $this->settings['packages'][$packagePath] = array
         (
-            'folder'  => str_replace ('/', '-', $package) .'-'. substr ($packageInfo['sha'], 0, 7),
-            'sha'     => $packageInfo['sha'],
-            'node_id' => $packageInfo['node_id']
+            'folder' => $folder
         );
 
-        $folder = QERO_DIR .'/qero-packages/'. $package .'/'. $this->settings['packages'][$package]['folder'];
+        $folder = QERO_DIR .'/qero-packages/'. $package .'/'. $this->settings['packages'][$packagePath]['folder'];
         $info   = array ();
 
         if (file_exists ($folder .'/qero-info.json'))
@@ -101,24 +150,25 @@ class PackagesManager
 
             foreach ($this->parse as $parse)
                 if (isset ($info[$parse]))
-                    $this->settings['packages'][$package][$parse] = $info[$parse];
+                    $this->settings['packages'][$packagePath][$parse] = $info[$parse];
         }
 
-        if (!isset ($this->settings['packages'][$package]['entry_point']))
+        if (!isset ($this->settings['packages'][$packagePath]['entry_point']))
         {
-            $name = explode ('/', $package);
+            $name = $this->getPackageBlocks ($package);
+            $name = $name['name'];
             
-            foreach (array_merge (array (end ($name) .'.php'), $this->enteringPoints) as $entryPoint)
+            foreach (array_merge (array ($name .'.php'), $this->enteringPoints) as $entryPoint)
                 if (file_exists ($folder .'/'. $entryPoint))
                 {
-                    $this->settings['packages'][$package]['entry_point'] = $entryPoint;
+                    $this->settings['packages'][$packagePath]['entry_point'] = $entryPoint;
 
                     break;
                 }
 
-            if (!isset ($this->settings['packages'][$package]['entry_point']))
+            if (!isset ($this->settings['packages'][$packagePath]['entry_point']))
             {
-                $this->settings['packages'][$package]['entry_point'] = 'qero-init.php';
+                $this->settings['packages'][$packagePath]['entry_point'] = 'qero-init.php';
 
                 file_put_contents ($folder .'/qero-init.php', '<?php'. QERO_AUTOGENERATE . implode ("\n", array_map (function ($file)
                 {
@@ -129,10 +179,11 @@ class PackagesManager
 
         if (isset ($info['requires']))
         {
-            $this->settings['packages'][$package]['requires'] = $info['requires'];
+            $this->settings['packages'][$packagePath]['requires'] = $info['requires'];
 
             foreach ($info['requires'] as $repository)
-                $this->installPackage ($repository);
+                if (!isset ($this->settings['packages'][$repository]))
+                    $this->installPackage ($repository);
         }
 
         $this->updateSettings ();
@@ -140,22 +191,30 @@ class PackagesManager
     }
 
     /**
-     * @param string $package
+     * Удаление пакета
+     * 
+     * @param string $package - полное название пакета
      * 
      */
 
     public function deletePackage ($package)
     {
-        \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $package);
+        $package = $this->getPackageBlocks ($package);
 
-        if (sizeof (scandir (dirname (QERO_DIR .'/qero-packages/'. $package))) <= 2)
-            \Qero\dir_delete (dirname (QERO_DIR .'/qero-packages/'. $package));
+        \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $package['full_name']);
 
-        unset ($this->settings['packages'][$package]);
+        if (sizeof (scandir (dirname (QERO_DIR .'/qero-packages/'. $package['full_name']))) <= 2)
+            \Qero\dir_delete (dirname (QERO_DIR .'/qero-packages/'. $package['full_name']));
+
+        unset ($this->settings['packages'][$package['full_path']]);
         
         $this->updateSettings ();
         $this->constructAutoloadFile ();
     }
+
+    /**
+     * Обновление всех установленных пакетов
+     */
 
     public function updatePackages ()
     {
@@ -175,8 +234,12 @@ class PackagesManager
     }
 
     /**
-     * @param string $folder
-     * @param string $basefolder
+     * Получение списка PHP файлов в директории
+     * 
+     * @param string $folder - директория для анализа
+     * [@param string $basefolder = null] - префикс директории, который будет удалён
+     * 
+     * @return array - возвращает список PHP файлов
      * 
      */
 
@@ -201,6 +264,10 @@ class PackagesManager
         return $list;
     }
 
+    /**
+     * Создание файла подключения пакетов
+     */
+
     public function constructAutoloadFile ()
     {
         $packages = $this->settings['packages'];
@@ -208,15 +275,25 @@ class PackagesManager
         $autoload  = '<?php'. QERO_AUTOGENERATE;
         $autoload .= implode ("\n", array_map (function ($file) use ($packages)
         {
-            return 'require \''. $file .'/'. $packages[$file]['folder'] .'/'. $packages[$file]['entry_point'] .'\';';
+            if (isset ($packages[$file]))
+            {
+                $baseFile = explode (':', $file);
+                $baseFile = implode (':', array_slice ($baseFile, 1));
+
+                return 'require \''. $baseFile .'/'. $packages[$file]['folder'] .'/'. $packages[$file]['entry_point'] .'\';';
+            }
         }, $this->getRequires (array_keys ($this->settings['packages']))));
 
         file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n?>\n");
     }
 
     /**
-     * @param array $packages
-     * @param array $requires
+     * Получение списка зависимостей исходя из их приоритетности
+     * 
+     * @param array $packages - список пакетов для генерации
+     * [@param array $requires = null] - список зависимостей
+     * 
+     * @return array - возвращает список зависимостей
      * 
      */
 
@@ -228,18 +305,53 @@ class PackagesManager
         foreach ($packages as $package)
             if (!isset ($this->settings['packages'][$package]['requires']))
             {
-                if (array_search ($package, $requires) === false)
+                if (array_search (strtolower ($package), array_map ('strtolower', $requires)) === false)
                     $requires[] = $package;
             }
 
-            else $requires = array_merge ($requires, $this->settings['packages'][$package]['requires'], array ($package));
+            else
+            {
+                $requires = array_merge ($requires, $this->settings['packages'][$package]['requires']);
+                $requires[] = $package;
+            }
 
         return $requires;
     }
 
+    /**
+     * Обновление файла настроек
+     */
+
     public function updateSettings ()
     {
         file_put_contents (QERO_DIR .'/qero-packages/qero-info.json', json_encode ($this->settings, defined ('JSON_PRETTY_PRINT') ? JSON_PRETTY_PRINT : 0));
+    }
+
+    /**
+     * Получение информации из названия пакета
+     * 
+     * @param string $package - полное имя пакета
+     * 
+     */
+
+    protected function getPackageBlocks ($package)
+    {
+        $info   = explode (':', $package);
+        $source = 'github';
+
+        if (sizeof ($info) == 2)
+            $source = strtolower ($info[0]);
+
+        $info = explode ('/', end ($info));
+
+        return array
+        (
+            'source'    => $source,
+            'author'    => $info[0],
+            'name'      => $info[1],
+            'full_name' => implode ('/', $info),
+            'full_path' => $source .':'. implode ('/', $info)
+        );
     }
 }
 

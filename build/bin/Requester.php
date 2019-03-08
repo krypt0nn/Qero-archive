@@ -5,11 +5,14 @@ namespace Qero\Requester;
 class Requester
 {
     /**
-     * @param string $url
+     * GET запрос
+     * 
+     * @param string $url - URL для запроса
+     * @return mixed - возвращает результат запроса
      * 
      */
 
-    static function getRequest ($url)
+    public static function getRequest ($url)
     {
         if (extension_loaded ('curl') && $curl = curl_init ($url))
         {
