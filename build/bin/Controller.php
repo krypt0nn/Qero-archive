@@ -101,6 +101,8 @@ class Controller
 
             case 'update':
                 $this->manager->updatePackages ();
+
+                Printer::say ("\nUpdating complited");
             break;
 
             case 'packages':
