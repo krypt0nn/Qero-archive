@@ -7,6 +7,8 @@ $phar->buildFromDirectory ('build');
 
 fwrite (STDOUT, '
 
+   Qero build complited!
+
    Builded for '. round (microtime (true) - $begin, 4) .' sec.
    File size: '. round (filesize ('Qero.phar') / 1024, 2) .' Kb
    PHP version: '. phpversion () .'

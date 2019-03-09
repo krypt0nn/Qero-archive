@@ -6,6 +6,8 @@ use Qero\Requester\Requester;
 
 class GitHub implements Source
 {
+    static $watermark = 'sha';
+
     public static function getPackageInfo ($package)
     {
         return json_decode (@Requester::getRequest ('https://api.github.com/repos/'. $package), true);

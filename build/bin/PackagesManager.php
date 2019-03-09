@@ -91,9 +91,23 @@ class PackagesManager
             return false;
         }
 
-        Printer::say ('Installing "'. $package .'"...');
-
         $commit = $source::getPackageCommit ($package);
+
+        if (isset ($this->settings['packages'][$packageInfo['full_path']]))
+        {
+            if ($commit[$source::$watermark] == $this->settings['packages'][$packageInfo['full_path']]['watermark'])
+            {
+                Printer::say ('Repository "'. $package .'" already installed. Skipping...', 1);
+
+                $this->registerNewPackage ($package, $commit, $source);
+
+                return false;
+            }
+
+            else Printer::say ('Repository "'. $package .'" already installed, but version is outdated. Updating...', 1);
+        }
+
+        Printer::say ('Installing "'. $package .'"...');
 
         \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $package);
         mkdir (QERO_DIR .'/qero-packages/'. $package, 0777, true);
@@ -105,9 +119,7 @@ class PackagesManager
         unset ($archive);
         \PharData::unlinkArchive (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
 
-        $source = explode ('\\', $source);
-        $source = end ($source);
-        $this->registerNewPackage ($package, $commit, strtolower ($source));
+        $this->registerNewPackage ($package, $commit, $source);
 
         return true;
     }
@@ -123,6 +135,10 @@ class PackagesManager
 
     public function registerNewPackage ($package, $packageInfo, $source = 'github')
     {
+        $sourceClass = $source;
+
+        $source = explode ('\\', $source);
+        $source = strtolower (end ($source));
         $packagePath = $source .':'. $package;
 
         foreach (array_slice (scandir (QERO_DIR .'/qero-packages/'. $package), 2) as $dir)
@@ -138,7 +154,8 @@ class PackagesManager
 
         $this->settings['packages'][$packagePath] = array
         (
-            'folder' => $folder
+            'folder'    => $folder,
+            'watermark' => $packageInfo[$sourceClass::$watermark]
         );
 
         $folder = QERO_DIR .'/qero-packages/'. $package .'/'. $this->settings['packages'][$packagePath]['folder'];
@@ -303,17 +320,28 @@ class PackagesManager
             $requires = array ();
 
         foreach ($packages as $package)
+        {
+            $package = $this->getPackageBlocks ($package);
+            $package = $package['full_path'];
+
             if (!isset ($this->settings['packages'][$package]['requires']))
             {
-                if (array_search (strtolower ($package), array_map ('strtolower', $requires)) === false)
+                if (array_search ($package, $requires) === false)
                     $requires[] = $package;
             }
 
             else
             {
-                $requires = array_merge ($requires, $this->settings['packages'][$package]['requires']);
+                $requires = array_merge ($requires, array_map (function ($requirement)
+                {
+                    $requirement = $this->getPackageBlocks ($requirement);
+
+                    return $requirement['full_path'];
+                }, $this->settings['packages'][$package]['requires']));
+
                 $requires[] = $package;
             }
+        }
 
         return $requires;
     }

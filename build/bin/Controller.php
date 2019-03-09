@@ -24,8 +24,12 @@ define ('QERO_FOOTER', '
         vk.com/technomindlp
         vk.com/hphp_convertation
 
-     Version: '. QERO_VERSION .'
+     Qero '. QERO_VERSION .'
 
+     Copyright © 2018 - 2019 Podvirnyy Nikita (KRypt0n_)
+     This program comes with ABSOLUTELY NO WARRANTY;
+     This is free software, and you are welcome to redistribute it under certain conditions;
+     lookup <https://github.com/KRypt0nn/Qero/license.txt> for details.
 
 ');
 

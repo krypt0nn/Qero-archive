@@ -6,6 +6,8 @@ use Qero\Requester\Requester;
 
 class BitBucket implements Source
 {
+    static $watermark = 'hash';
+    
     public static function getPackageInfo ($package)
     {
         return json_decode (@Requester::getRequest ('https://api.bitbucket.org/2.0/repositories/'. $package), true);

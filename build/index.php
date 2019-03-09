@@ -22,7 +22,7 @@
 
 namespace Qero;
 
-define ('QERO_VERSION', '2.4');
+define ('QERO_VERSION', '2.5');
 
 /**
  * Рекурсивное удаление директории и всех последующих директорий и файлов

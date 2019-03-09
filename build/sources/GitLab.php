@@ -6,7 +6,8 @@ use Qero\Requester\Requester;
 
 class GitLab implements Source
 {
-    static $cache = array ();
+    static $watermark = 'id';
+    static $cache     = array ();
     
     public static function getPackageInfo ($package)
     {
