@@ -22,7 +22,7 @@
 
 namespace Qero;
 
-define ('QERO_VERSION', '2.5.1');
+define ('QERO_VERSION', '2.5.2');
 
 /**
  * Рекурсивное удаление директории и всех последующих директорий и файлов
@@ -57,6 +57,7 @@ define ('QERO_DIR', dirname (substr (__DIR__, 0, 7) == 'phar://' ? substr (__DIR
 if (!is_dir (QERO_DIR .'/qero-packages'))
     mkdir (QERO_DIR .'/qero-packages');
 
+require 'exts/ProgressBar.php';
 require 'bin/Printer.php';
 require 'bin/Exceptions.php';
 require 'bin/Controller.php';

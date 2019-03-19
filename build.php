@@ -14,6 +14,11 @@ fwrite (STDOUT, '
    PHP version: '. phpversion () .'
    Date: '. date ('Y/m/d H:i:s') .' (timestamp '. time () .')
 
+   Checksums:
+      SHA1: '. strtoupper (sha1_file ('Qero.phar')) .'
+      MD5: '. strtoupper (md5_file ('Qero.phar')) .'
+      CRC32: '. crc32 (file_get_contents ('Qero.phar')) .'
+
 ');
 
 /*if (Phar::canCompress (Phar::GZ))

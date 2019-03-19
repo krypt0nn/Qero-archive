@@ -13,6 +13,8 @@ define ('QERO_AUTOGENERATE', '
 
 ');
 
+define ('QERO_PROGRESS_STEPS', 8);
+
 class PackagesManager
 {
     /**
@@ -78,6 +80,8 @@ class PackagesManager
 
             default:
                 Printer::say ('Source "'. $packageInfo['source'] .'" not founded. Skipping...', 2);
+
+                return false;
             break;
         }
 
@@ -107,19 +111,34 @@ class PackagesManager
             else Printer::say ('Repository "'. $package .'" already installed, but version is outdated. Updating...', 1);
         }
 
-        Printer::say ('Installing "'. $package .'"...');
+        // Printer::say ('Installing "'. $package .'"...');
+
+        $progressBar = new \Console_ProgressBar (' Installing... %fraction% [%bar%] %percent%; ETA: %elapsed% ('. $package .')', '=>', ' ', 100, QERO_PROGRESS_STEPS, array
+        (
+            'ansi_terminal' => true,
+            'ansi_clear'    => true
+        ));
+
+        $progressBar->update (1);
 
         \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $package);
         mkdir (QERO_DIR .'/qero-packages/'. $package, 0777, true);
 
         file_put_contents (QERO_DIR .'/qero-packages/'. $package .'/branch.tar', $source::getPackageArchive ($package));
 
+        $progressBar->update (2);
+
         $archive = new \PharData (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
         $archive->extractTo (QERO_DIR .'/qero-packages/'. $package);
         unset ($archive);
         \PharData::unlinkArchive (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
 
-        $this->registerNewPackage ($package, $commit, $source);
+        $progressBar->update (3);
+
+        $progressBarPos = 3;
+        $this->registerNewPackage ($package, $commit, $source, $progressBar, $progressBarPos);
+
+        $progressBar->update (++$progressBarPos);
 
         return true;
     }
@@ -133,7 +152,7 @@ class PackagesManager
      * 
      */
 
-    public function registerNewPackage ($package, $packageInfo, $source = 'github')
+    public function registerNewPackage ($package, $packageInfo, $source = 'github', &$progressBar = null, &$progressBarPos = 0)
     {
         $sourceClass = $source;
 
@@ -170,6 +189,9 @@ class PackagesManager
                     $this->settings['packages'][$packagePath][$parse] = $info[$parse];
         }
 
+        if (is_object ($progressBar))
+            $progressBar->update (++$progressBarPos);
+
         if (!isset ($this->settings['packages'][$packagePath]['entry_point']))
         {
             $name = $this->getPackageBlocks ($package);
@@ -194,6 +216,9 @@ class PackagesManager
             }
         }
 
+        if (is_object ($progressBar))
+            $progressBar->update (++$progressBarPos);
+
         if (isset ($info['requires']))
         {
             $this->settings['packages'][$packagePath]['requires'] = $info['requires'];
@@ -203,8 +228,14 @@ class PackagesManager
                     $this->installPackage ($repository);
         }
 
+        if (is_object ($progressBar))
+            $progressBar->update (++$progressBarPos);
+
         $this->updateSettings ();
         $this->constructAutoloadFile ();
+
+        if (is_object ($progressBar))
+            $progressBar->update (++$progressBarPos);
     }
 
     /**
@@ -299,9 +330,13 @@ class PackagesManager
 
                 return 'require \''. $baseFile .'/'. $packages[$file]['folder'] .'/'. $packages[$file]['entry_point'] .'\';';
             }
-        }, $this->getRequires (array_keys ($this->settings['packages']))));
+        }, $packages = $this->getRequires (array_keys ($this->settings['packages']))));
 
-        file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n?>\n");
+        file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = array\n(\n\tarray ('". implode ("'),\n\tarray ('", array_map (function ($package)
+        {
+            return "$package', '". (isset ($this->settings['packages'][$package]['version']) ? 
+                $this->settings['packages'][$package]['version'] : 'undefined');
+        }, $packages)) ."')\n);\n\n?>\n");
     }
 
     /**
