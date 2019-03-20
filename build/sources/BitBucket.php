@@ -17,12 +17,13 @@ class BitBucket implements Source
     {
         $commit = json_decode (@Requester::getRequest ('https://api.bitbucket.org/2.0/repositories/'. $package .'/commits'), true);
 
-        return $commit['values'][0];
+        return isset ($commit['values'][0]) ?
+            $commit['values'][0] : false;
     }
 
     public static function getPackageArchive ($package)
     {
-        return @Requester::getRequest ('https://bitbucket.org/'. $package .'/get/master.tar.gz');
+        return @Requester::getRequest ('https://bitbucket.org/'. $package .'/get/master.tar.gz', true);
     }
 }
 

@@ -1,5 +1,7 @@
 <?php
 
+ini_set ('phar.readonly', 0);
+
 $begin = microtime (true);
 
 $phar = new Phar ('Qero.phar');

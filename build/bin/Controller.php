@@ -107,7 +107,12 @@ class Controller
 
             case 'packages':
                 if (isset ($this->manager->settings['packages']) && sizeof ($this->manager->settings['packages']) > 0)
-                    Printer::say ("Installed packages:\n\n". implode ("\n", array_keys ($this->manager->settings['packages'])));
+                    Printer::say ("Installed packages:\n\n". implode ("\n", array_map (function ($package)
+                    {
+                        return isset ($this->manager->settings['packages'][$package]['version']) ?
+                            $package .' (version: '. $this->manager->settings['packages'][$package]['version'] .')' :
+                            $package;
+                    }, array_keys ($this->manager->settings['packages']))));
 
                 else Printer::say ('No one package installed');
             break;

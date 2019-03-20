@@ -26,6 +26,8 @@ class GitLab implements Source
 
                 return $packageInfo;
             }
+
+        return false;
     }
 
     public static function getPackageCommit ($package)
@@ -37,7 +39,7 @@ class GitLab implements Source
 
     public static function getPackageArchive ($package)
     {
-        return @Requester::getRequest ('https://gitlab.com/api/v4/projects/'. self::$cache[$package] .'/repository/archive.tar');
+        return @Requester::getRequest ('https://gitlab.com/api/v4/projects/'. self::$cache[$package] .'/repository/archive.tar', true);
     }
 }
 

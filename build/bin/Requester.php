@@ -12,15 +12,32 @@ class Requester
      * 
      */
 
-    public static function getRequest ($url)
+    public static function getRequest ($url, $useProgressBar = false)
     {
         if (extension_loaded ('curl') && $curl = curl_init ($url))
         {
+            $progressBar = false;
+
+            if ($useProgressBar)
+                $progressBar = new \Console_ProgressBar ('   Downloading... [%bar%] %percent%; ETA: %elapsed%', '=>', ' ', 70, 100, array
+                (
+                    //'ansi_terminal' => true,
+                    //'ansi_clear'    => true
+                ));
+
             curl_setopt_array ($curl, array (
-                CURLOPT_HEADER         => true,
+                CURLOPT_HEADER         => false,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_SSL_VERIFYHOST => false,
                 CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_NOPROGRESS     => false,
+
+                CURLOPT_PROGRESSFUNCTION => function ($t, $download_size, $downloaded, $upload_size, $uploaded) use (&$progressBar)
+                {
+                    if ($progressBar)
+                        $progressBar->update (ceil ($downloaded/ $download_size * 100));
+                },
 
                 CURLOPT_HTTPHEADER => array
                 (
@@ -29,8 +46,10 @@ class Requester
             ));
 
             $response = curl_exec ($curl);
-
             curl_close ($curl);
+
+            if ($useProgressBar)
+                fwrite (STDOUT, "\n\n");
 
             return $response;
         }

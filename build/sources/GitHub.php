@@ -17,12 +17,13 @@ class GitHub implements Source
     {
         $commit = json_decode (@Requester::getRequest ('https://api.github.com/repos/'. $package .'/commits'), true);
 
-        return $commit[0];
+        return isset ($commit[0]) ?
+            $commit[0] : false;
     }
 
     public static function getPackageArchive ($package)
     {
-        return @Requester::getRequest ('https://api.github.com/repos/'. $package .'/tarball');
+        return @Requester::getRequest ('https://api.github.com/repos/'. $package .'/tarball', true);
     }
 }
 

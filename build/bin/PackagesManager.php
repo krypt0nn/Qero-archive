@@ -96,6 +96,13 @@ class PackagesManager
         }
 
         $commit = $source::getPackageCommit ($package);
+        
+        if ($commit === false || !isset ($commit[$source::$watermark]))
+        {
+            Printer::say ('Repository "'. $package .'" not founded. Skipping...', 1);
+
+            return false;
+        }
 
         if (isset ($this->settings['packages'][$packageInfo['full_path']]))
         {
@@ -111,34 +118,19 @@ class PackagesManager
             else Printer::say ('Repository "'. $package .'" already installed, but version is outdated. Updating...', 1);
         }
 
-        // Printer::say ('Installing "'. $package .'"...');
-
-        $progressBar = new \Console_ProgressBar (' Installing... %fraction% [%bar%] %percent%; ETA: %elapsed% ('. $package .')', '=>', ' ', 100, QERO_PROGRESS_STEPS, array
-        (
-            'ansi_terminal' => true,
-            'ansi_clear'    => true
-        ));
-
-        $progressBar->update (1);
+        Printer::say ('Installing "'. $package .'"...');
 
         \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $package);
         mkdir (QERO_DIR .'/qero-packages/'. $package, 0777, true);
 
         file_put_contents (QERO_DIR .'/qero-packages/'. $package .'/branch.tar', $source::getPackageArchive ($package));
 
-        $progressBar->update (2);
-
         $archive = new \PharData (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
         $archive->extractTo (QERO_DIR .'/qero-packages/'. $package);
         unset ($archive);
         \PharData::unlinkArchive (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
 
-        $progressBar->update (3);
-
-        $progressBarPos = 3;
-        $this->registerNewPackage ($package, $commit, $source, $progressBar, $progressBarPos);
-
-        $progressBar->update (++$progressBarPos);
+        $this->registerNewPackage ($package, $commit, $source);
 
         return true;
     }
@@ -152,7 +144,7 @@ class PackagesManager
      * 
      */
 
-    public function registerNewPackage ($package, $packageInfo, $source = 'github', &$progressBar = null, &$progressBarPos = 0)
+    public function registerNewPackage ($package, $packageInfo, $source = 'github')
     {
         $sourceClass = $source;
 
@@ -189,9 +181,6 @@ class PackagesManager
                     $this->settings['packages'][$packagePath][$parse] = $info[$parse];
         }
 
-        if (is_object ($progressBar))
-            $progressBar->update (++$progressBarPos);
-
         if (!isset ($this->settings['packages'][$packagePath]['entry_point']))
         {
             $name = $this->getPackageBlocks ($package);
@@ -216,9 +205,6 @@ class PackagesManager
             }
         }
 
-        if (is_object ($progressBar))
-            $progressBar->update (++$progressBarPos);
-
         if (isset ($info['requires']))
         {
             $this->settings['packages'][$packagePath]['requires'] = $info['requires'];
@@ -228,14 +214,8 @@ class PackagesManager
                     $this->installPackage ($repository);
         }
 
-        if (is_object ($progressBar))
-            $progressBar->update (++$progressBarPos);
-
         $this->updateSettings ();
         $this->constructAutoloadFile ();
-
-        if (is_object ($progressBar))
-            $progressBar->update (++$progressBarPos);
     }
 
     /**
