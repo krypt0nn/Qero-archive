@@ -251,7 +251,7 @@ class PackagesManager
     {
         if (is_array ($this->settings['packages']))
         {
-            $repos = array_keys ($this->settings['packages']);
+            $repos = array_unique (array_keys ($this->settings['packages']));
 
             foreach ($repos as $repo)
                 if (isset ($this->settings['packages'][$repo]['requires']))
