@@ -140,6 +140,7 @@ foreach ($required_packages as $package)
 **version** | Версия пакета
 **entry_point** | Точка входа пакета - **PHP** файл, который будет подключен автоматически
 **requires** | Список зависимостей пакета. Они будут установлены вместе с пакетом и запущены до него
+**after_install** | **PHP** файл, который будет подключен по окончанию загрузки пакета
 
 К примеру:
 
@@ -150,9 +151,12 @@ foreach ($required_packages as $package)
     "requires": [
         "KRypt0nn/TreeStructure",
         "KRypt0nn/Dataset-Structures"
-    ]
+    ],
+    "after_install": "installed.php"
 }
 ```
+
+> Для примера вы можете посмотреть [этот](https://github.com/KRypt0nn/Qero-test-repo) репозиторий
 
 Вот и всё. Приятного использования! :3
 

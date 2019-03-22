@@ -214,6 +214,9 @@ class PackagesManager
                     $this->installPackage ($repository);
         }
 
+        if (isset ($info['after_install']))
+            @require $folder .'/'. $info['after_install'];
+
         $this->updateSettings ();
         $this->constructAutoloadFile ();
     }
@@ -358,7 +361,7 @@ class PackagesManager
             }
         }
 
-        return $requires;
+        return array_unique ($requires);
     }
 
     /**

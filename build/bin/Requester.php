@@ -36,7 +36,7 @@ class Requester
                 CURLOPT_PROGRESSFUNCTION => function ($t, $download_size, $downloaded, $upload_size, $uploaded) use (&$progressBar)
                 {
                     if ($progressBar)
-                        $progressBar->update (ceil ($downloaded/ $download_size * 100));
+                        $progressBar->update (ceil ($downloaded / $download_size * 100));
                 },
 
                 CURLOPT_HTTPHEADER => array
