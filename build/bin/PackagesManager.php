@@ -3,6 +3,7 @@
 namespace Qero\PackagesManager;
 use Qero\Printer\Printer;
 use Qero\Requester\Requester;
+use Qero\AutoloadGenerator\AutoloadGenerator;
 
 define ('QERO_AUTOGENERATE', '
 
@@ -193,16 +194,6 @@ class PackagesManager
 
                     break;
                 }
-
-            if (!isset ($this->settings['packages'][$packagePath]['entry_point']))
-            {
-                $this->settings['packages'][$packagePath]['entry_point'] = 'qero-init.php';
-
-                file_put_contents ($folder .'/qero-init.php', '<?php'. QERO_AUTOGENERATE . implode ("\n", array_map (function ($file)
-                {
-                    return '@require \''. $file .'\';';
-                }, $this->getPhpsList ($folder))) ."\n\n?>\n");
-            }
         }
 
         if (isset ($info['requires']))
@@ -218,7 +209,7 @@ class PackagesManager
             @require $folder .'/'. $info['after_install'];
 
         $this->updateSettings ();
-        $this->constructAutoloadFile ();
+        AutoloadGenerator::generateAutoload ();
     }
 
     /**
@@ -240,7 +231,7 @@ class PackagesManager
         unset ($this->settings['packages'][$package['full_path']]);
         
         $this->updateSettings ();
-        $this->constructAutoloadFile ();
+        AutoloadGenerator::generateAutoload ();
     }
 
     /**
@@ -274,7 +265,7 @@ class PackagesManager
      * 
      */
 
-    protected function getPhpsList ($folder, $basefolder = null)
+    public function getPhpsList ($folder, $basefolder = null)
     {
         $list = array ();
 
@@ -285,7 +276,7 @@ class PackagesManager
         {
             $ext = explode ('.', $file);
 
-            if (strtolower (end ($ext)) == 'php')
+            if (strtolower (end ($ext)) == 'php' && strpos ($file, '.') !== false)
                 $list[] = str_replace ($basefolder, '', $folder .'/'. $file);
 
             elseif (is_dir ($folder .'/'. $file))
@@ -293,33 +284,6 @@ class PackagesManager
         }
 
         return $list;
-    }
-
-    /**
-     * Создание файла подключения пакетов
-     */
-
-    public function constructAutoloadFile ()
-    {
-        $packages = $this->settings['packages'];
-
-        $autoload  = '<?php'. QERO_AUTOGENERATE;
-        $autoload .= implode ("\n", array_map (function ($file) use ($packages)
-        {
-            if (isset ($packages[$file]))
-            {
-                $baseFile = explode (':', $file);
-                $baseFile = implode (':', array_slice ($baseFile, 1));
-
-                return 'require \''. $baseFile .'/'. $packages[$file]['folder'] .'/'. $packages[$file]['entry_point'] .'\';';
-            }
-        }, $packages = $this->getRequires (array_keys ($this->settings['packages']))));
-
-        file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = array\n(\n\tarray ('". implode ("'),\n\tarray ('", array_map (function ($package)
-        {
-            return "$package', '". (isset ($this->settings['packages'][$package]['version']) ? 
-                $this->settings['packages'][$package]['version'] : 'undefined');
-        }, $packages)) ."')\n);\n\n?>\n");
     }
 
     /**
@@ -332,7 +296,7 @@ class PackagesManager
      * 
      */
 
-    protected function getRequires ($packages, $requires = null)
+    public function getRequires ($packages, $requires = null)
     {
         if ($requires === null)
             $requires = array ();
@@ -380,7 +344,7 @@ class PackagesManager
      * 
      */
 
-    protected function getPackageBlocks ($package)
+    public function getPackageBlocks ($package)
     {
         $info   = explode (':', $package);
         $source = 'github';

@@ -62,6 +62,31 @@ php Qero.phar install KRypt0nn/TreeStructure KRypt0nn/Dataset-Structures
 php Qero.phar install gitlab:KRypt0n_/MathLib
 ```
 
+**Qero** так же может работать с крупными проектами. К примеру, вы можете прямо "из коробки" запустить [**PHP-AI**](https://github.com/php-ai/php-ml) *(PHP 7.1+)*:
+
+```cmd
+php Qero.phar install php-ai/php-ml
+```
+
+```php
+<?php
+
+require 'qero-packages/autoload.php';
+
+# А дальше код идёт прямо из примера на главной странице PHP-AI
+
+use Phpml\Classification\KNearestNeighbors;
+
+$samples = [[1, 3], [1, 4], [2, 4], [3, 1], [4, 1], [4, 2]];
+$labels = ['a', 'a', 'a', 'b', 'b', 'b'];
+
+$classifier = new KNearestNeighbors();
+$classifier->train($samples, $labels);
+
+echo $classifier->predict([3, 2]);
+// return 'b'
+```
+
 ### Запуск через PHP
 
 Для работы с **Qero** через **PHP** файл вы должны использовать класс **PackagesManager**. Подробную документацию я опущу, однако вот конкретные примеры:
@@ -129,9 +154,9 @@ foreach ($required_packages as $package)
 * **autorun.php**
 * **startup.php**
 
-Вы так же можете указать настройки для установки вашего пакета. Для этого создайте файл **qero-info.json** в корневой директории вашего репозитория. В этом файле вы можете прописать главную информацию для корректной работы **Qero**
+Если этого файла нет, то **Qero** сделает всё за вас. Однако учтите, что возможна некорректная работа пакетов
 
-> Если этого файла нет, то **Qero** будет пытаться сделать всё за вас, и в больших проектах это может привести не к самым лучшим последствиям
+Вы так же можете указать настройки для установки вашего пакета. Для этого создайте файл **qero-info.json** в корневой директории вашего репозитория. В этом файле вы можете прописать главную информацию для корректной работы **Qero**
 
 ### Доступные настройки:
 

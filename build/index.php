@@ -22,7 +22,7 @@
 
 namespace Qero;
 
-define ('QERO_VERSION', '2.5.5');
+define ('QERO_VERSION', '2.6.0');
 
 /**
  * Рекурсивное удаление директории и всех последующих директорий и файлов
@@ -66,6 +66,7 @@ require 'sources/SourceInterface.php';
 require 'sources/GitHub.php';
 require 'sources/GitLab.php';
 require 'sources/BitBucket.php';
+require 'bin/AutoloadGenerator.php';
 require 'bin/PackagesManager.php';
 
 use Qero\Printer\Printer;
