@@ -7,7 +7,7 @@ use Qero\Printer\Printer;
 use Qero\PackagesManager\PackagesManager;
 
 define ('QERO_FOOTER', '
-
+'. "\x1b[36;1m" .'
       ___           ___           ___           ___     
      /\  \         /\  \         /\  \         /\  \    
     /::\  \       /::\  \       /::\  \       /::\  \   
@@ -19,18 +19,18 @@ define ('QERO_FOOTER', '
       /:/  /     \:\ \/__/      |:|\/__/     \:\/:/  /  
      /:/  /       \:\__\        |:|  |        \::/  /   
      \/__/         \/__/         \|__|         \/__/    
-
+'. "\x1b[35;1m" .'
      Author: Observer KRypt0n_
         vk.com/technomindlp
         vk.com/hphp_convertation
-
+'. "\x1b[36;1m" .'
      Qero '. QERO_VERSION .'
-
+'. "\x1b[30;1m" .'
      Copyright © 2018 - 2019 Podvirnyy Nikita (KRypt0n_)
      This program comes with ABSOLUTELY NO WARRANTY;
      This is free software, and you are welcome to redistribute it under certain conditions;
      lookup <https://github.com/KRypt0nn/Qero/license.txt> for details.
-
+'. "\x1b[0m" .'
 ');
 
 define ('QERO_HELP', '
@@ -82,7 +82,7 @@ class Controller
                 foreach (array_slice ($args, 2) as $repository)
                     $this->manager->installPackage ($repository);
 
-                Printer::say ("\nInstalling complited");
+                Printer::say ("\n\x1b[32;1mInstalling complited\x1b[0m");
             break;
 
             case 'delete':
@@ -91,18 +91,18 @@ class Controller
 
                 foreach (array_slice ($args, 2) as $package)
                 {
-                    Printer::say ('Deleting "'. $package .'"...');
+                    Printer::say ('Deleting '. "\x1b[33;1m$package\x1b[0m" .'...');
 
                     $this->manager->deletePackage ($package);
                 }
 
-                Printer::say ("\nDeleting complited");
+                Printer::say ("\n\x1b[32;1mDeleting complited\x1b[0m");
             break;
 
             case 'update':
                 $this->manager->updatePackages ();
 
-                Printer::say ("\nUpdating complited");
+                Printer::say ("\n\x1b[32;1mUpdating complited\x1b[0m");
             break;
 
             case 'packages':
@@ -110,8 +110,8 @@ class Controller
                     Printer::say ("Installed packages:\n\n". implode ("\n", array_map (function ($package)
                     {
                         return isset ($this->manager->settings['packages'][$package]['version']) ?
-                            $package .' (version: '. $this->manager->settings['packages'][$package]['version'] .')' :
-                            $package;
+                            "\x1b[33;1m$package\x1b[0m" .' (version: '. $this->manager->settings['packages'][$package]['version'] .')' :
+                            "\x1b[33;1m$package\x1b[0m";
                     }, array_keys ($this->manager->settings['packages']))));
 
                 else Printer::say ('No one package installed');

@@ -80,7 +80,7 @@ class PackagesManager
             break;
 
             default:
-                Printer::say ('Source "'. $packageInfo['source'] .'" not founded. Skipping...', 2);
+                Printer::say ('Source '. "\x1b[33;1m". $packageInfo['source'] ."\x1b[0m" .' not founded. Skipping...', 2);
 
                 return false;
             break;
@@ -91,7 +91,7 @@ class PackagesManager
 
         if (!is_array ($info))
         {
-            Printer::say ('Repository "'. $package .'" not founded. Skipping...', 1);
+            Printer::say ('Repository '. "\x1b[33;1m$package\x1b[0m" .' not founded. Skipping...', 1);
 
             return false;
         }
@@ -100,7 +100,7 @@ class PackagesManager
         
         if ($commit === false || !isset ($commit[$source::$watermark]))
         {
-            Printer::say ('Repository "'. $package .'" not founded. Skipping...'. PHP_EOL, 1);
+            Printer::say ('Repository '. "\x1b[33;1m$package\x1b[0m" .' not founded. Skipping...'. PHP_EOL, 1);
 
             return false;
         }
@@ -109,17 +109,17 @@ class PackagesManager
         {
             if ($commit[$source::$watermark] == $this->settings['packages'][$packageInfo['full_path']]['watermark'])
             {
-                Printer::say ('Repository "'. $package .'" already installed. Skipping...'. PHP_EOL, 1);
+                Printer::say ('Repository '. "\x1b[33;1m$package\x1b[0m" .' already installed. Skipping...'. PHP_EOL, 1);
 
                 $this->registerNewPackage ($package, $commit, $source);
 
                 return false;
             }
 
-            else Printer::say ('Repository "'. $package .'" already installed, but version is outdated. Updating...'. PHP_EOL, 1);
+            else Printer::say ('Repository '. "\x1b[33;1m$package\x1b[0m" .' already installed, but version is outdated. Updating...'. PHP_EOL, 1);
         }
 
-        Printer::say ('Installing "'. $package .'"...');
+        Printer::say ('Installing '. "\x1b[33;1m$package\x1b[0m" .'...');
 
         \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $package);
         mkdir (QERO_DIR .'/qero-packages/'. $package, 0777, true);
@@ -360,7 +360,7 @@ class PackagesManager
         (
             'source'    => $source,
             'author'    => $info[0],
-            'name'      => $info[1],
+            'name'      => isset ($info[1]) ? $info[1] : '',
             'full_name' => implode ('/', $info),
             'full_path' => $source .':'. implode ('/', $info)
         );

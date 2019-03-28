@@ -14,7 +14,9 @@ class AutoloadGenerator
         $requires = '';
         $classes  = '';
 
-        $progressBar = new \Console_ProgressBar ('   Building... %fraction% [%bar%] %percent%; Elapsed: %elapsed%', '=>', ' ', 100, sizeof ($packages), array ());
+        if (($size = sizeof ($packages)) > 0)
+            $progressBar = new \Console_ProgressBar ('   Building... %fraction% [%bar%] %percent%; Elapsed: %elapsed%', '=>', ' ', 100, $size, array ());
+
         $i = 0;
 
         foreach ($packages as $file)
@@ -29,10 +31,12 @@ class AutoloadGenerator
 
             else $requires .= 'require \''. $baseFile .'/'. $controller->manager->settings['packages'][$file]['folder'] .'/'. $controller->manager->settings['packages'][$file]['entry_point'] ."';\n";
 
-            $progressBar->update (++$i);
+            if (isset ($progressBar))
+                $progressBar->update (++$i);
         }
 
-        fwrite (STDOUT, "\n\n");
+        if (isset ($progressBar))
+            fwrite (STDOUT, "\n\n");
 
         $autoload .= $requires .'
 

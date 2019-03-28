@@ -26,11 +26,11 @@ class Printer
             switch ($state)
             {
                 case 1:
-                    fwrite (STDERR, ' [!] '. $message .PHP_EOL);
+                    fwrite (STDERR, " \x1b[31;1m[!]\x1b[0m $message" .PHP_EOL);
                 break;
 
                 case 2:
-                    fwrite (STDOUT, ' [*] '. $message .PHP_EOL);
+                    fwrite (STDOUT, " \x1b[33;1m[*]\x1b[0m $message" .PHP_EOL);
                 break;
 
                 case 0:
