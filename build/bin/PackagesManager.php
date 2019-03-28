@@ -100,7 +100,7 @@ class PackagesManager
         
         if ($commit === false || !isset ($commit[$source::$watermark]))
         {
-            Printer::say ('Repository "'. $package .'" not founded. Skipping...', 1);
+            Printer::say ('Repository "'. $package .'" not founded. Skipping...'. PHP_EOL, 1);
 
             return false;
         }
@@ -109,14 +109,14 @@ class PackagesManager
         {
             if ($commit[$source::$watermark] == $this->settings['packages'][$packageInfo['full_path']]['watermark'])
             {
-                Printer::say ('Repository "'. $package .'" already installed. Skipping...', 1);
+                Printer::say ('Repository "'. $package .'" already installed. Skipping...'. PHP_EOL, 1);
 
                 $this->registerNewPackage ($package, $commit, $source);
 
                 return false;
             }
 
-            else Printer::say ('Repository "'. $package .'" already installed, but version is outdated. Updating...', 1);
+            else Printer::say ('Repository "'. $package .'" already installed, but version is outdated. Updating...'. PHP_EOL, 1);
         }
 
         Printer::say ('Installing "'. $package .'"...');
@@ -126,8 +126,10 @@ class PackagesManager
 
         file_put_contents (QERO_DIR .'/qero-packages/'. $package .'/branch.tar', $source::getPackageArchive ($package));
 
+        Printer::say ('  Unpacking...');
+
         $archive = new \PharData (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
-        $archive->extractTo (QERO_DIR .'/qero-packages/'. $package);
+        $archive->extractTo (QERO_DIR .'/qero-packages/'. $package, null, true);
         unset ($archive);
         \PharData::unlinkArchive (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
 
@@ -240,7 +242,7 @@ class PackagesManager
 
     public function updatePackages ()
     {
-        if (is_array ($this->settings['packages']))
+        if (isset ($this->settings['packages']) && is_array ($this->settings['packages']))
         {
             $repos = array_unique (array_keys ($this->settings['packages']));
 

@@ -14,6 +14,9 @@ class AutoloadGenerator
         $requires = '';
         $classes  = '';
 
+        $progressBar = new \Console_ProgressBar ('   Building... %fraction% [%bar%] %percent%; Elapsed: %elapsed%', '=>', ' ', 100, sizeof ($packages), array ());
+        $i = 0;
+
         foreach ($packages as $file)
         {
             $baseFile = explode (':', $file);
@@ -22,10 +25,14 @@ class AutoloadGenerator
             if (!isset ($controller->manager->settings['packages'][$file]['entry_point']))
                 foreach (self::getPHPClasses (QERO_DIR .'/qero-packages/'. ($tPath = $baseFile .'/'. $controller->manager->settings['packages'][$file]['folder'])) as $pathFile => $fileClasses)
                     foreach ($fileClasses as $class)
-                        $classes .= "'$class' => __DIR__ .'/$tPath/$pathFile',\n\t";
+                        $classes .= "'$class' => '$tPath/$pathFile',\n\t";
 
             else $requires .= 'require \''. $baseFile .'/'. $controller->manager->settings['packages'][$file]['folder'] .'/'. $controller->manager->settings['packages'][$file]['entry_point'] ."';\n";
+
+            $progressBar->update (++$i);
         }
+
+        fwrite (STDOUT, "\n\n");
 
         $autoload .= $requires .'
 
@@ -37,7 +44,7 @@ $classes = array
 spl_autoload_register (function ($class) use ($classes)
 {
     if (isset ($classes[$class]))
-        include $classes[$class];
+        include __DIR__ .\'/\'. $classes[$class];
 });';
 
         file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = array\n(\n\tarray ('". implode ("'),\n\tarray ('", array_map (function ($package)

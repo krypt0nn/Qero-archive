@@ -2,6 +2,8 @@
 
 namespace Qero\Requester;
 
+use Qero\Printer\Printer;
+
 class Requester
 {
     /**
@@ -19,11 +21,7 @@ class Requester
             $progressBar = false;
 
             if ($useProgressBar)
-                $progressBar = new \Console_ProgressBar ('   Downloading... [%bar%] %percent%; ETA: %elapsed%', '=>', ' ', 70, 100, array
-                (
-                    //'ansi_terminal' => true,
-                    //'ansi_clear'    => true
-                ));
+                $progressBar = new \Console_ProgressBar ('   Downloading... [%bar%] %percent%; Elapsed: %elapsed%', '=>', ' ', 100, 100, array ());
 
             curl_setopt_array ($curl, array (
                 CURLOPT_HEADER         => false,
@@ -49,7 +47,11 @@ class Requester
             curl_close ($curl);
 
             if ($useProgressBar)
-                fwrite (STDOUT, "\n\n");
+            {
+                $progressBar->update (100);
+
+                fwrite (STDOUT, "\n");
+            }
 
             return $response;
         }
