@@ -36,7 +36,7 @@ class AutoloadGenerator
         }
 
         if (isset ($progressBar))
-            fwrite (STDOUT, "\n\n");
+            fwrite (STDOUT, PHP_EOL . PHP_EOL);
 
         $autoload .= $requires .'
 
@@ -51,7 +51,7 @@ spl_autoload_register (function ($class) use ($classes)
         include __DIR__ .\'/\'. $classes[$class];
 });';
 
-        file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = array\n(\n\tarray ('". implode ("'),\n\tarray ('", array_map (function ($package)
+        file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = array\n(\n\tarray ('". implode ("'),\n\tarray ('", array_map (function ($package) use ($controller)
         {
             return "$package', '". (isset ($controller->manager->settings['packages'][$package]['version']) ? 
                 $controller->manager->settings['packages'][$package]['version'] : 'undefined');

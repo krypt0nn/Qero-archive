@@ -50,7 +50,7 @@ class Requester
             {
                 $progressBar->update (100);
 
-                fwrite (STDOUT, "\n");
+                fwrite (STDOUT, PHP_EOL);
             }
 
             return $response;

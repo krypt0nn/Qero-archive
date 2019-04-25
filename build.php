@@ -1,6 +1,7 @@
 <?php
 
 ini_set ('phar.readonly', 0);
+date_default_timezone_set ('UTC');
 
 $begin = microtime (true);
 
@@ -14,7 +15,7 @@ fwrite (STDOUT, '
    Builded for '. round (microtime (true) - $begin, 4) .' sec.
    File size: '. round (filesize ('Qero.phar') / 1024, 2) .' Kb
    PHP version: '. phpversion () .'
-   Date: '. date ('Y/m/d H:i:s') .' (timestamp '. time () .')
+   Date: '. date ('Y/m/d H:i:s') .' (UTC+0, timestamp: '. time () .')
 
    Checksums:
       SHA1: '. strtoupper (sha1_file ('Qero.phar')) .'

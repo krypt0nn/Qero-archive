@@ -22,7 +22,7 @@
 
 namespace Qero;
 
-define ('QERO_VERSION', '2.6.2');
+define ('QERO_VERSION', '2.7');
 
 /**
  * Рекурсивное удаление директории и всех последующих директорий и файлов
@@ -31,13 +31,15 @@ define ('QERO_VERSION', '2.6.2');
  * 
  */
 
+date_default_timezone_set ('UTC');
+
 function dir_delete ($path)
 {
     if (!is_dir ($path))
         return false;
 
     foreach (array_slice (scandir ($path), 2) as $file)
-        if (is_dir ($file = "$path/$file"))
+        if (is_dir ($file = $path .'/'. $file))
         {
             dir_delete ($file);
 
@@ -75,15 +77,19 @@ use Qero\Controller\Controller;
 global $controller;
 
 $controller = new Controller;
-$controller->printFooter ();
 
-if ($argc == 1)
+if ($argc <= 1)
 {
-    Printer::say ('Parameters not selected. Help:', 2);
+    $controller->printFooter ();
 
-    $controller->printHelp ();
+    Printer::say ('Parameters not selected. Use "Qero help" to see commands list', 1);
 }
 
-else $controller->executeCommand ($argv, $argc);
+else
+{
+    echo PHP_EOL;
+
+    $controller->executeCommand ($argv, $argc);
+}
 
 ?>
