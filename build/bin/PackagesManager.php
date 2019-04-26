@@ -227,6 +227,13 @@ class PackagesManager
         $package = $this->getPackageBlocks ($package);
         $delete  = false;
 
+        if (!is_dir (QERO_DIR .'/qero-packages/'. $package['full_name']))
+        {
+            Printer::say ('Package '. Printer::color ("\x1b[33;1m") . $package['full_name'] . Printer::color ("\x1b[0m") .' not founded. Skipping...'. PHP_EOL, 2);
+
+            return;
+        }
+
         \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $package['full_name']);
 
         if (sizeof (scandir (dirname (QERO_DIR .'/qero-packages/'. $package['full_name']))) <= 2)
