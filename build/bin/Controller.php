@@ -5,6 +5,7 @@ namespace Qero\Controller;
 use Qero\Exceptions\Exception;
 use Qero\Printer\Printer;
 use Qero\PackagesManager\PackagesManager;
+use Qero\AutoloadGenerator\AutoloadGenerator;
 
 define ('QERO_FOOTER', '
 '. Printer::color ("\x1b[36;1m") .'
@@ -44,6 +45,7 @@ define ('QERO_HELP', '
         remove [packages list] - remove installed packages (with package source)
         update                 - updating (re-installing) all installed packages
         packages               - print installed packages list
+        rebuild                - rebuild "qero-packages/autoload.php" file
 
 ');
 
@@ -100,9 +102,14 @@ class Controller
             break;
 
             case 'update':
-                $this->manager->updatePackages ();
+                if (isset ($this->manager->settings['packages']) && sizeof ($this->manager->settings['packages']) > 0)
+                {
+                    $this->manager->updatePackages ();
 
-                Printer::say (PHP_EOL . Printer::color ("\x1b[32;1m") .'Updating complited'. Printer::color ("\x1b[0m"));
+                    Printer::say (PHP_EOL . Printer::color ("\x1b[32;1m") .'Updating complited'. Printer::color ("\x1b[0m"));
+                }
+
+                else Printer::say ('No one package installed', 2);
             break;
 
             case 'packages':
@@ -114,7 +121,13 @@ class Controller
                             Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m");
                     }, array_keys ($this->manager->settings['packages']))));
 
-                else Printer::say ('No one package installed');
+                else Printer::say ('No one package installed', 2);
+            break;
+
+            case 'rebuild':
+                Printer::say ('Rebuilding "autoload.php"...');
+
+                AutoloadGenerator::generateAutoload ();
             break;
 
             default:
@@ -143,5 +156,3 @@ class Controller
         Printer::say (QERO_HELP);
     }
 }
-
-?>

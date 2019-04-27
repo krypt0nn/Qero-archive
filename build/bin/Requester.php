@@ -3,6 +3,7 @@
 namespace Qero\Requester;
 
 use Qero\Printer\Printer;
+use ProgressBar\ProgressBar;
 
 class Requester
 {
@@ -21,7 +22,7 @@ class Requester
             $progressBar = false;
 
             if ($useProgressBar)
-                $progressBar = new \Console_ProgressBar ('   Downloading... [%bar%] %percent%; Elapsed: %elapsed%', '=>', ' ', 100, 100, array ());
+                $progressBar = new ProgressBar (100, 48, '   Downloading... ');
 
             curl_setopt_array ($curl, array (
                 CURLOPT_HEADER         => false,
@@ -34,7 +35,7 @@ class Requester
                 CURLOPT_PROGRESSFUNCTION => function ($t, $download_size, $downloaded, $upload_size, $uploaded) use (&$progressBar)
                 {
                     if ($progressBar)
-                        $progressBar->update (ceil ($downloaded / $download_size * 100));
+                        $progressBar->update ((int)($downloaded / $download_size * 100));
                 },
 
                 CURLOPT_HTTPHEADER => array
@@ -72,4 +73,3 @@ class Requester
     }
 }
 
-?>

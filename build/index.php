@@ -22,7 +22,7 @@
 
 namespace Qero;
 
-define ('QERO_VERSION', '2.7.1');
+define ('QERO_VERSION', '2.8');
 
 /**
  * Рекурсивное удаление директории и всех последующих директорий и файлов
@@ -74,6 +74,14 @@ require 'bin/PackagesManager.php';
 use Qero\Printer\Printer;
 use Qero\Controller\Controller;
 
+if ($argv[0] != basename (__DIR__))
+{
+    Printer::$print = false;
+
+    fclose (STDOUT);
+    fclose (STDERR);
+}
+
 global $controller;
 
 $controller = new Controller;
@@ -91,5 +99,3 @@ else
 
     $controller->executeCommand ($argv, $argc);
 }
-
-?>

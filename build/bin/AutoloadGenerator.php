@@ -2,6 +2,8 @@
 
 namespace Qero\AutoloadGenerator;
 
+use ProgressBar\ProgressBar;
+
 class AutoloadGenerator
 {
     public static function generateAutoload ()
@@ -15,7 +17,7 @@ class AutoloadGenerator
         $classes  = '';
 
         if (($size = sizeof ($packages)) > 0)
-            $progressBar = new \Console_ProgressBar ('   Building... %fraction% [%bar%] %percent%; Elapsed: %elapsed%', '=>', ' ', 100, $size, array ());
+            $progressBar = new ProgressBar ($size, 48, '   Building... ');
 
         $i = 0;
 
@@ -51,11 +53,11 @@ spl_autoload_register (function ($class) use ($classes)
         include __DIR__ .\'/\'. $classes[$class];
 });';
 
-        file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = array\n(\n\tarray ('". implode ("'),\n\tarray ('", array_map (function ($package) use ($controller)
+        file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = ". ($size > 0 ? "array\n(\n\tarray ('". implode ("'),\n\tarray ('", array_map (function ($package) use ($controller)
         {
             return "$package', '". (isset ($controller->manager->settings['packages'][$package]['version']) ? 
                 $controller->manager->settings['packages'][$package]['version'] : 'undefined');
-        }, $packages)) ."')\n);\n\n?>\n");
+        }, $packages)) ."')\n);" : 'null;') ."\n");
     }
 
     public static function getPHPClasses ($file)
@@ -126,5 +128,3 @@ spl_autoload_register (function ($class) use ($classes)
         }
     }
 }
-
-?>

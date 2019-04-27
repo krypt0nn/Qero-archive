@@ -1,6 +1,7 @@
 <?php
 
 namespace Qero\PackagesManager;
+
 use Qero\Printer\Printer;
 use Qero\Requester\Requester;
 use Qero\AutoloadGenerator\AutoloadGenerator;
@@ -100,7 +101,7 @@ class PackagesManager
         
         if ($commit === false || !isset ($commit[$source::$watermark]))
         {
-            Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' not founded. Skipping...'. PHP_EOL, 1);
+            Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' not founded. Skipping...', 1);
 
             return false;
         }
@@ -109,14 +110,14 @@ class PackagesManager
         {
             if ($commit[$source::$watermark] == $this->settings['packages'][$packageInfo['full_path']]['watermark'])
             {
-                Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' already installed. Skipping...'. PHP_EOL, 2);
+                Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' already installed. Skipping...', 2);
 
                 $this->registerNewPackage ($package, $commit, $source);
 
                 return false;
             }
 
-            else Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' already installed, but version is outdated. Updating...'. PHP_EOL, 2);
+            else Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' already installed, but version is outdated. Updating...', 2);
         }
 
         Printer::say ('Installing '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .'...');
@@ -227,8 +228,9 @@ class PackagesManager
         $package = $this->getPackageBlocks ($package);
         $delete  = false;
 
-        if (!is_dir (QERO_DIR .'/qero-packages/'. $package['full_name']))
+        if (!is_dir (QERO_DIR .'/qero-packages/'. $package['full_name']) || !isset ($this->settings['packages'][$package['full_path']]))
         {
+            echo "\n";
             Printer::say ('Package '. Printer::color ("\x1b[33;1m") . $package['full_name'] . Printer::color ("\x1b[0m") .' not founded. Skipping...'. PHP_EOL, 2);
 
             return;
@@ -381,5 +383,3 @@ class PackagesManager
         );
     }
 }
-
-?>

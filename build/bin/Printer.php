@@ -4,6 +4,7 @@ namespace Qero\Printer;
 
 class Printer
 {
+    static $print = true;
     static $canUseColors = null;
 
     /**
@@ -21,7 +22,7 @@ class Printer
 
     public static function say ($message, $state = 0)
     {
-        if (defined ('STDOUT') && defined ('STDERR'))
+        if (defined ('STDOUT') && defined ('STDERR') && self::$print)
         {
             $message = str_replace ("\n", "\n ", $message);
 
@@ -64,5 +65,3 @@ class Printer
         return self::$canUseColors ? $color : '';
     }
 }
-
-?>

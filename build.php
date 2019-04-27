@@ -29,5 +29,3 @@ fwrite (STDOUT, '
 
 elseif (Phar::canCompress (Phar::BZ2))
    $phar->compress (Phar::BZ2, '.phar.bz2');*/
-
-?>
