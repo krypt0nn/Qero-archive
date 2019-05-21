@@ -41,7 +41,7 @@ define ('QERO_HELP', '
 
     Commands:
         help                   - print Qero commands list
-        install [repos list]   - downloading repositories to the folder
+        install [*repos list]  - downloading repositories to the folder
         remove [packages list] - remove installed packages (with package source)
         update                 - updating (re-installing) all installed packages
         packages               - print installed packages list
@@ -79,7 +79,17 @@ class Controller
 
             case 'install':
                 if ($argc < 3)
-                    throw new Exception ('Installing repository isn\'t selected');
+                {
+                    if (file_exists (QERO_DIR .'/qero-info.json'))
+                    {
+                        $info = json_decode (file_get_contents ('qero-info.json'), true);
+
+                        if (isset ($info['requires']))
+                            $args = array_merge ($args, $info['requires']);
+                    }
+
+                    else throw new Exception ('Installing repository isn\'t selected');
+                }
 
                 foreach (array_slice ($args, 2) as $repository)
                     $this->manager->installPackage ($repository);

@@ -33,11 +33,11 @@ php Qero.phar help
 Команда | Аргументы | Описание
 --------|-----------|----------
 **help** | - | Вывод списка доступных команд
-**install** | [список репозиториев] | Установка пакетов
+**install** | [*список репозиториев] | Установка пакетов. Вы так же можете оставить список пустым, если рядом есть файл *qero-info.json*: иогда Qero загрузит зависимости
 **remove** | [список пакетов] | Удаление пакетов *(с указанием источника пакета)*
 **update** | - | Обновление *(переустановка)* пакетов
 **packages** | - | Вывод списка установленных пакетов
-**rebuild** | - | Перестройка файла "qero-packages/autoload.php"
+**rebuild** | - | Перестройка файла "*qero-packages/autoload.php*"
 
 К примеру:
 
@@ -180,4 +180,4 @@ foreach ($required_packages as $package)
 
 Вот и всё. Приятного использования! :3
 
-Автор: [Подвирный Никита](https://vk.com/technomindlp). Специально для [Enfesto Studio Group](http://vk.com/hphp_convertation)
+Автор: [Подвирный Никита](https://vk.com/technomindlp). Специально для [Enfesto Studio Group](https://vk.com/hphp_convertation)

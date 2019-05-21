@@ -117,7 +117,7 @@ class PackagesManager
                 return false;
             }
 
-            else Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' already installed, but version is outdated. Updating...', 2);
+            else Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' already installed, but version is outdated. Updating...'. PHP_EOL, 2);
         }
 
         Printer::say ('Installing '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .'...');
