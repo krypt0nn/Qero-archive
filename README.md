@@ -38,11 +38,12 @@ php Qero.phar help
 **update** | - | Обновление *(переустановка)* пакетов
 **packages** | - | Вывод списка установленных пакетов
 **rebuild** | - | Перестройка файла "*qero-packages/autoload.php*"
+**upgrade** | - | Переустановка Qero до актуальной версии
 
 К примеру:
 
 ```cmd
-php Qero.phar install KRypt0nn/TreeStructure KRypt0nn/Dataset-Structures
+php Qero.phar install KRypt0nn/AVLTree KRypt0nn/VKAPI
 ```
 
 Имена пакетов так же могут быть дополнены источником - одной из следующих фраз
@@ -169,8 +170,8 @@ foreach ($required_packages as $package)
     "version": "1.0",
     "entry_point": "packet.php",
     "requires": [
-        "KRypt0nn/TreeStructure",
-        "KRypt0nn/Dataset-Structures"
+        "KRypt0nn/ProgressBar",
+        "KRypt0nn/ConsoleArgs"
     ],
     "after_install": "installed.php"
 }

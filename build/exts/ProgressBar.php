@@ -29,6 +29,7 @@ class ProgressBar
     protected $prefix;
     protected $postfix;
     protected $progressChar;
+    protected $progressSubChar;
     protected $skeleton; // Скелет прогресс бара
     protected $exp; // Экспонента прогресса. Формально - количество символов, на которое будет изменяться прогресс бар за 1 процент
 
@@ -37,7 +38,10 @@ class ProgressBar
      * 
      * @param double $maxCount - максимальное число операндов до достижения цели
      * @param int $length - длина прогресс бара (в символах, учитывается только активное поле символов)
+     * @param string $prefix - префикс прогресс бара
+     * @param string $postfix - постфикс прогресс бара
      * @param string $progressChar - символ, которым будет заполняться прогресс бар
+     * @param string $progressSubChar - половина предыдущего символа (для отображения половины процента)
      * 
      * @throws \Exception - выбрасывает исключения при аллогичных значениях параметров
      * 
@@ -54,7 +58,7 @@ class ProgressBar
      * 
      */
 
-    public function __construct ($maxCount, $length, $prefix = '', $postfix = '', $progressChar = '█')
+    public function __construct ($maxCount, $length, $prefix = '', $postfix = '', $progressChar = '█', $progressSubChar = '▌')
     {
         if (!is_numeric ($maxCount) || $maxCount < 0)
             throw new \Exception ('$maxCount param must be a non-negative number');
@@ -65,11 +69,15 @@ class ProgressBar
         if (!is_string ($progressChar))
             throw new \Exception ('$progressChar param must be an symbol');
 
-        $this->maxCount     = $maxCount;
-        $this->length       = $length;
-        $this->prefix       = $prefix;
-        $this->postfix      = $postfix;
-        $this->progressChar = $progressChar;
+        if (!is_string ($progressSubChar))
+            throw new \Exception ('$progressSubChar param must be an symbol');
+
+        $this->maxCount        = $maxCount;
+        $this->length          = $length;
+        $this->prefix          = $prefix;
+        $this->postfix         = $postfix;
+        $this->progressChar    = $progressChar;
+        $this->progressSubChar = $progressSubChar;
 
         $this->skeleton = $prefix .'0% |';
 
@@ -103,14 +111,13 @@ class ProgressBar
         
         $permLength = strlen ($this->skeleton);
 
-        $this->skeleton = $this->prefix . ($process = (int)($position / $this->maxCount * 100)) .'% |';
-        
-        $processExp = $process * $this->exp;
+        $this->skeleton = $this->prefix . ($process = (int)($floatProcess = $position / $this->maxCount * 100)) .'% |';
+        $this->skeleton .= str_repeat ($this->progressChar, $processExp = $process * $this->exp);
 
-        for ($i = 0; $i < $this->length; ++$i)
-            $this->skeleton .= $i < $processExp ?
-                $this->progressChar : ' ';
+        if ($floatProcess - $process >= 0.5)
+            $this->skeleton .= $this->progressSubChar;
 
+        $this->skeleton .= str_repeat (' ', $this->length - $processExp);
         $this->skeleton .= '|'. $this->postfix;
 
         $this->offset ($permLength);

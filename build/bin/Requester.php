@@ -11,10 +11,9 @@ class Requester
      * GET запрос
      * 
      * @param string $url - URL для запроса
-     * @return mixed - возвращает результат запроса
      * 
+     * @return mixed - возвращает результат запроса
      */
-
     public static function getRequest ($url, $useProgressBar = false)
     {
         if (extension_loaded ('curl') && $curl = curl_init ($url))
@@ -72,4 +71,3 @@ class Requester
         )));
     }
 }
-

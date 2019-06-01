@@ -9,7 +9,6 @@ interface Source
      * 
      * @param string $package - полное название пакета
      */
-
     public static function getPackageInfo ($package);
     
     /**
@@ -17,7 +16,6 @@ interface Source
      * 
      * @param string $package - полное название пакета
      */
-
     public static function getPackageCommit ($package);
 
     /**
@@ -25,8 +23,5 @@ interface Source
      * 
      * @param string $package - полное название пакета
      */
-    
     public static function getPackageArchive ($package);
 }
-
-?>

@@ -5,8 +5,7 @@ date_default_timezone_set ('UTC');
 
 $begin = microtime (true);
 
-$phar = new Phar ('Qero.phar');
-$phar->buildFromDirectory ('build');
+(new Phar ('Qero.phar'))->buildFromDirectory ('build');
 
 fwrite (STDOUT, '
 
@@ -15,7 +14,7 @@ fwrite (STDOUT, '
    Builded for '. round (microtime (true) - $begin, 4) .' sec.
    File size: '. round (filesize ('Qero.phar') / 1024, 2) .' Kb
    PHP version: '. phpversion () .'
-   Date: '. date ('Y/m/d H:i:s') .' (UTC+0, timestamp: '. time () .')
+   Date: '. date ('Y/m/d H:i:s') .' (UTC, timestamp: '. time () .')
 
    Checksums:
       SHA1: '. strtoupper (sha1_file ('Qero.phar')) .'
@@ -23,9 +22,3 @@ fwrite (STDOUT, '
       CRC32: '. crc32 (file_get_contents ('Qero.phar')) .'
 
 ');
-
-/*if (Phar::canCompress (Phar::GZ))
-   $phar->compress (Phar::GZ, '.phar.gz');
-
-elseif (Phar::canCompress (Phar::BZ2))
-   $phar->compress (Phar::BZ2, '.phar.bz2');*/

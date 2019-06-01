@@ -7,7 +7,7 @@ use Qero\Printer\Printer;
 use Qero\PackagesManager\PackagesManager;
 use Qero\AutoloadGenerator\AutoloadGenerator;
 
-define ('QERO_FOOTER', '
+define ('QERO_HEADER', '
 '. Printer::color ("\x1b[36;1m") .'
       ___           ___           ___           ___     
      /\  \         /\  \         /\  \         /\  \    
@@ -46,6 +46,7 @@ define ('QERO_HELP', '
         update                 - updating (re-installing) all installed packages
         packages               - print installed packages list
         rebuild                - rebuild "qero-packages/autoload.php" file
+        upgrade                - upgrade Qero to actual version
 
 ');
 
@@ -63,9 +64,7 @@ class Controller
      * 
      * @param array $args - список аргументов консоли
      * [@param int $argc = null] - кол-во аргументов
-     * 
      */
-
     public function executeCommand ($args, $argc = null)
     {
         if ($argc === null)
@@ -94,7 +93,7 @@ class Controller
                 foreach (array_slice ($args, 2) as $repository)
                     $this->manager->installPackage ($repository);
 
-                Printer::say (Printer::color ("\n\x1b[32;1m") .'Installing complited'. Printer::color ("\x1b[0m"));
+                Printer::say (Printer::color ("\n\x1b[32;1m") .'Installing completed'. Printer::color ("\x1b[0m"));
             break;
 
             case 'remove':
@@ -108,7 +107,7 @@ class Controller
                     $this->manager->removePackage ($package);
                 }
 
-                Printer::say (PHP_EOL . Printer::color ("\x1b[32;1m") .'Removing complited'. Printer::color ("\x1b[0m"));
+                Printer::say (PHP_EOL . Printer::color ("\x1b[32;1m") .'Removing completed'. Printer::color ("\x1b[0m"));
             break;
 
             case 'update':
@@ -116,19 +115,49 @@ class Controller
                 {
                     $this->manager->updatePackages ();
 
-                    Printer::say (PHP_EOL . Printer::color ("\x1b[32;1m") .'Updating complited'. Printer::color ("\x1b[0m"));
+                    Printer::say (PHP_EOL . Printer::color ("\x1b[32;1m") .'Updating completed'. Printer::color ("\x1b[0m"));
                 }
 
                 else Printer::say ('No one package installed', 2);
+            break;
+
+            case 'upgrade':
+                if (file_exists ($qero = QERO_DIR .'/'. ($qeroDir = 'qero-'. substr (sha1 (microtime (true) . rand (1, 9999999999)), 0, 8)) .'.tar'))
+                    unlink ($qero);
+
+                file_put_contents ($qero, \Qero\Sources\GitHub\GitHub::getPackageArchive ('KRypt0nn/Qero'));
+
+                \Qero\dir_delete ($qeroDir = QERO_DIR .'/'. $qeroDir);
+                mkdir ($qeroDir);
+
+                Printer::say ('  Unpacking...');
+        
+                $archive = new \PharData ($qero);
+                $archive->extractTo ($qeroDir, null, true);
+                unset ($archive);
+                \PharData::unlinkArchive ($qero);
+
+                foreach (array_slice (scandir ($qeroDir), 2) as $dir)
+                    if (is_dir ($qeroDir .'/'. $dir))
+                    {
+                        $qeroDir .= '/'. $dir;
+
+                        break;
+                    }
+
+                (new \Phar ('Qero.phar'))->buildFromDirectory ($qeroDir .'/build');
+                \Qero\dir_delete (dirname ($qeroDir));
+
+                Printer::say (PHP_EOL . Printer::color ("\x1b[32;1m") .'Upgrading completed'. Printer::color ("\x1b[0m"));
             break;
 
             case 'packages':
                 if (isset ($this->manager->settings['packages']) && sizeof ($this->manager->settings['packages']) > 0)
                     Printer::say ('Installed packages:'. PHP_EOL . PHP_EOL . implode (PHP_EOL, array_map (function ($package)
                     {
-                        return isset ($this->manager->settings['packages'][$package]['version']) ?
+                        return ' - '. (isset ($this->manager->settings['packages'][$package]['version']) ?
                             Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' (version: '. $this->manager->settings['packages'][$package]['version'] .')' :
-                            Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m");
+                            Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m"));
                     }, array_keys ($this->manager->settings['packages']))));
 
                 else Printer::say ('No one package installed', 2);
@@ -149,19 +178,17 @@ class Controller
     /**
      * Вывод шапки программы
      */
-
-    public function printFooter ()
+    public function printHeader ()
     {
-        Printer::say (QERO_FOOTER);
+        Printer::say (QERO_HEADER);
     }
 
     /**
      * Вывод помощи (списка команд)
      */
-
     public function printHelp ()
     {
-        $this->printFooter ();
+        $this->printHeader ();
 
         Printer::say (QERO_HELP);
     }

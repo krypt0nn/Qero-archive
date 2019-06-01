@@ -17,9 +17,7 @@ class Printer
      *   2 - информация
      * 
      *   default value: 0
-     * 
      */
-
     public static function say ($message, $state = 0)
     {
         if (defined ('STDOUT') && defined ('STDERR') && self::$print)
@@ -48,10 +46,9 @@ class Printer
      * Корректор цвета текста консоли
      * 
      * @param string $color - возвращаемое значение в случае если система поддерживает ASCII colors
-     * @return string
      * 
+     * @return string
      */
-
     public static function color ($color)
     {
         if (self::$canUseColors === null)

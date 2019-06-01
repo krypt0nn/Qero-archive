@@ -22,17 +22,15 @@
 
 namespace Qero;
 
-define ('QERO_VERSION', '2.8.1');
+define ('QERO_VERSION', '2.9');
+
+date_default_timezone_set ('UTC');
 
 /**
  * Рекурсивное удаление директории и всех последующих директорий и файлов
  * 
  * @param string $path - директория для удаления
- * 
  */
-
-date_default_timezone_set ('UTC');
-
 function dir_delete ($path)
 {
     if (!is_dir ($path))
@@ -88,7 +86,7 @@ $controller = new Controller;
 
 if ($argc <= 1)
 {
-    $controller->printFooter ();
+    $controller->printHeader ();
 
     Printer::say ('Parameters not selected. Use "Qero help" to see commands list', 1);
 }
