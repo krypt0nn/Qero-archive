@@ -26,6 +26,14 @@ class AutoloadGenerator
 
         foreach ($packages as $file)
         {
+            if (!isset ($controller->manager->settings['packages'][$file]))
+            {
+                if (isset ($progressBar))
+                    $progressBar->update (++$i);
+
+                continue;
+            }
+
             $baseFile = explode (':', $file);
             $baseFile = implode (':', array_slice ($baseFile, 1));
 

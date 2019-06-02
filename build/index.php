@@ -22,7 +22,7 @@
 
 namespace Qero;
 
-define ('QERO_VERSION', '2.9.1');
+define ('QERO_VERSION', '2.9.2');
 
 date_default_timezone_set ('UTC');
 
