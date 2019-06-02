@@ -164,8 +164,10 @@ class Controller
             break;
 
             case 'rebuild':
-                Printer::say ('Rebuilding "autoload.php"...');
+                if (!isset ($this->manager->settings['packages']) || sizeof ($this->manager->settings['packages']) == 0)
+                    Printer::say ('No one package installed'. PHP_EOL, 2);
 
+                Printer::say ('Rebuilding "autoload.php"...');
                 AutoloadGenerator::generateAutoload ();
             break;
 

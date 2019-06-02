@@ -12,7 +12,10 @@ class AutoloadGenerator
 
         $autoload  = '<?php'. QERO_AUTOGENERATE;
         
-        $packages = $controller->manager->getRequires (array_keys ($controller->manager->settings['packages']));
+        $packages = isset ($controller->manager->settings['packages']) ?
+            $controller->manager->getRequires (array_keys ($controller->manager->settings['packages'])) :
+            array ();
+        
         $requires = '';
         $classes  = '';
 
