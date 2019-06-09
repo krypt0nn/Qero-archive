@@ -1,10 +1,6 @@
 <?php
 
-namespace Qero\PackagesManager;
-
-use Qero\Printer\Printer;
-use Qero\Requester\Requester;
-use Qero\AutoloadGenerator\AutoloadGenerator;
+namespace Qero;
 
 define ('QERO_AUTOGENERATE', '
 
@@ -18,18 +14,9 @@ define ('QERO_AUTOGENERATE', '
 class PackagesManager
 {
     /**
-     * Массив настроек
+     * Массив пакетов
      */
-    public $settings = array ();
-
-    /**
-     * Список индексов, которые будут парситься из файла "qero-info.json" в... "qero-info.json"
-     */
-    protected $parse = array
-    (
-        'version',
-        'entry_point'
-    );
+    public $packages = array ();
 
     /**
      * Список имён начальных файлов для подключение (в порядке понижения приоритета)
@@ -46,10 +33,11 @@ class PackagesManager
 
     public function __construct ()
     {
-        if (!file_exists (QERO_DIR .'/qero-packages/qero-info.json'))
-            $this->updateSettings ();
-        
-        $this->settings = json_decode (file_get_contents (QERO_DIR .'/qero-packages/qero-info.json'), true);
+        $packages = file_exists (QERO_DIR .'/qero-packages/packages.json') ?
+            json_decode (file_get_contents (QERO_DIR .'/qero-packages/packages.json'), true) : array ();
+
+        foreach ($packages as $name => $package)
+            $this->packages[$name] = new Package ($package);
     }
 
     /**
@@ -66,157 +54,81 @@ class PackagesManager
         switch ($packageInfo['source'])
         {
             case 'github':
-                $source = 'Qero\Sources\GitHub\GitHub';
+                $source = 'Qero\Sources\GitHub';
             break;
 
             case 'gitlab':
-                $source = 'Qero\Sources\GitLab\GitLab';
+                $source = 'Qero\Sources\GitLab';
             break;
 
             case 'bitbucket':
-                $source = 'Qero\Sources\BitBucket\BitBucket';
+                $source = 'Qero\Sources\BitBucket';
             break;
 
             default:
-                Printer::say ('Source '. Printer::color ("\x1b[33;1m"). $packageInfo['source'] .Printer::color ("\x1b[0m") .' not founded. Skipping...', 1);
+                Printer::say ('Source '. Printer::color ("\x1b[33;1m"). $packageInfo['source'] .Printer::color ("\x1b[0m") .' not founded. Skipping...'. PHP_EOL, 1);
 
                 return false;
             break;
         }
 
-        $package = $packageInfo['full_name'];
+        $package = new Package (array (
+            'name'      => $packageInfo['full_name'],
+            'full_name' => $packageInfo['full_path'],
+            'version'   => $packageInfo['version'],
+            'source'    => new $source ($packageInfo['full_name'])
+        ));
 
-        if (isset ($alreadyInstalled[$package]))
+        if (isset ($alreadyInstalled[$packageInfo['full_path']]))
             return false;
 
-        $info = $source::getPackageInfo ($package);
+        $commit = $package->getCommit ();
 
-        if (!is_array ($info))
+        if (isset ($this->packages[$packageInfo['full_path']]))
         {
-            Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' not founded. Skipping...', 1);
-
-            return false;
-        }
-
-        $commit = $source::getPackageCommit ($package);
-        
-        if ($commit === false || !isset ($commit[$source::$watermark]))
-        {
-            Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' not founded. Skipping...', 1);
-
-            return false;
-        }
-
-        if (isset ($this->settings['packages'][$packageInfo['full_path']]))
-        {
-            if ($commit[$source::$watermark] == $this->settings['packages'][$packageInfo['full_path']]['watermark'])
+            if ($commit[$source::$watermark] == $this->packages[$packageInfo['full_path']]->watermark)
             {
-                Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' already installed. Skipping...', 2);
-
-                $this->registerNewPackage ($package, $commit, $source);
+                Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .' already installed. Skipping...'. PHP_EOL, 2);
 
                 return false;
             }
 
-            else Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' already installed, but version is outdated. Updating...'. PHP_EOL, 2);
+            else Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .' already installed, but version is outdated. Updating...'. PHP_EOL, 2);
         }
 
-        Printer::say ('Installing '. Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .'...');
+        Printer::say ('Installing '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .'...');
 
-        \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $package);
-        mkdir (QERO_DIR .'/qero-packages/'. $package, 0777, true);
+        $package = $package->download ()->register ();
 
-        file_put_contents (QERO_DIR .'/qero-packages/'. $package .'/branch.tar', $source::getPackageArchive ($package));
-
-        Printer::say ('  Unpacking...');
-
-        $archive = new \PharData (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
-        $archive->extractTo (QERO_DIR .'/qero-packages/'. $package, null, true);
-        unset ($archive);
-        \PharData::unlinkArchive (QERO_DIR .'/qero-packages/'. $package .'/branch.tar');
-
-        $this->registerNewPackage ($package, $commit, $source, array_merge ($alreadyInstalled, array ($package => true)));
+        $this->registerPackage ($package, array_merge ($alreadyInstalled, array ($package->full_name => true)));
 
         return true;
     }
 
     /**
+     * FIXME
+     * 
      * Регистрация нового пакета в менеджере
      * 
      * @param string $package - полное название пакета
-     * @param array $packageInfo - информация о пакете
-     * [@param string $source = 'github'] - источник пакета
      */
-    public function registerNewPackage ($package, $packageInfo, $source = 'github', $alreadyInstalled = array ())
+    public function registerPackage ($package, $alreadyInstalled = array ())
     {
-        $sourceClass = $source;
+        $this->packages[$package->full_name] = $package;
 
-        $source = explode ('\\', $source);
-        $source = strtolower (end ($source));
-        $packagePath = $source .':'. $package;
-
-        if (is_dir (QERO_DIR .'/qero-packages/'. $package))
-            foreach (array_slice (scandir (QERO_DIR .'/qero-packages/'. $package), 2) as $dir)
-                if (is_dir (QERO_DIR .'/qero-packages/'. $package .'/'. $dir))
-                {
-                    $folder = $dir;
-
-                    break;
-                }
-        
-        if (!isset ($folder))
-            $folder = str_replace ('/', '-', $package) .'-'. substr ($packageInfo['sha'], 0, 7);
-
-        $this->settings['packages'][$packagePath] = array
-        (
-            'folder'    => $folder,
-            'watermark' => $packageInfo[$sourceClass::$watermark]
-        );
-
-        $folder = QERO_DIR .'/qero-packages/'. $package .'/'. $this->settings['packages'][$packagePath]['folder'];
-        $info   = array ();
-
-        if (file_exists ($folder .'/qero-info.json'))
-        {
-            $info = json_decode (file_get_contents ($folder .'/qero-info.json'), true);
-
-            foreach ($this->parse as $parse)
-                if (isset ($info[$parse]))
-                    $this->settings['packages'][$packagePath][$parse] = $info[$parse];
-        }
-
-        if (!isset ($this->settings['packages'][$packagePath]['entry_point']))
-        {
-            $name = $this->getPackageBlocks ($package);
-            $name = $name['name'];
-            
-            foreach (array_merge (array ($name .'.php'), $this->enteringPoints) as $entryPoint)
-                if (file_exists ($folder .'/'. $entryPoint))
-                {
-                    $this->settings['packages'][$packagePath]['entry_point'] = $entryPoint;
-
-                    break;
-                }
-        }
-
-        if (isset ($info['requires']))
-        {
-            $this->settings['packages'][$packagePath]['requires'] = $info['requires'];
-
-            foreach ($info['requires'] as $repository)
-                if (!isset ($this->settings['packages'][$repository]))
-                {
-                    echo PHP_EOL;
-
-                    $this->installPackage ($repository, $alreadyInstalled);
-                }
-        }
-
-        $this->updateSettings ();
         AutoloadGenerator::generateAutoload ();
 
-        if (isset ($info['after_install']))
-            @require $folder .'/'. $info['after_install'];
+        if (isset ($package->requires))
+            foreach ($package->requires as $repository)
+                if (!isset ($this->packages[$repository]))
+                {
+                    $this->installPackage ($repository, $alreadyInstalled);
+
+                    $alreadyInstalled[] = $repository;
+                }
+
+        if ($package->after_install !== null)
+            @require_once QERO_DIR .'/qero-packages/'. $package->name .'/'. $package->basefolder .'/'. $package->after_install;
     }
 
     /**
@@ -226,28 +138,30 @@ class PackagesManager
      */
     public function removePackage ($package)
     {
-        $package = $this->getPackageBlocks ($package);
-        $delete  = false;
+        $packageInfo = $this->getPackageBlocks ($package);
+        $delete = false;
 
-        if (!is_dir (QERO_DIR .'/qero-packages/'. $package['full_name']) || !isset ($this->settings['packages'][$package['full_path']]))
+        $package = new Package (array (
+            'name'      => $packageInfo['full_name'],
+            'full_name' => $packageInfo['full_path']
+        ));
+
+        if (!is_dir (QERO_DIR .'/qero-packages/'. $packageInfo['full_name']))
         {
-            echo "\n";
-            Printer::say ('Package '. Printer::color ("\x1b[33;1m") . $package['full_name'] . Printer::color ("\x1b[0m") .' not founded. Skipping...'. PHP_EOL, 2);
+            echo PHP_EOL;
+
+            Printer::say ('Package '. Printer::color ("\x1b[33;1m") . $packageInfo['full_name'] . Printer::color ("\x1b[0m") .' not founded. Skipping...'. PHP_EOL, 2);
 
             return;
         }
 
-        \Qero\dir_delete (QERO_DIR .'/qero-packages/'. $package['full_name']);
+        $package->remove ();
 
-        if (sizeof (scandir (dirname (QERO_DIR .'/qero-packages/'. $package['full_name']))) <= 2)
-            \Qero\dir_delete (dirname (QERO_DIR .'/qero-packages/'. $package['full_name']));
+        if ($this->packages[$packageInfo['full_path']]->requires !== null && sizeof ($this->packages[$packageInfo['full_path']]->requires) > 0)
+            $delete = 'Package '. Printer::color ("\x1b[33;1m") . $packageInfo['full_name'] . Printer::color ("\x1b[0m") .' have '. sizeof ($this->packages[$packageInfo['full_path']]->requires) .' requires. If you are sure to remove them - type:'. PHP_EOL . PHP_EOL .'  Qero.phar remove '. implode (' ', $this->packages[$packageInfo['full_path']]->requires). PHP_EOL;
 
-        if (isset ($this->settings['packages'][$package['full_path']]['requires']))
-            $delete = 'Package '. Printer::color ("\x1b[33;1m") . $package['full_name'] . Printer::color ("\x1b[0m") .' have '. sizeof ($this->settings['packages'][$package['full_path']]['requires']) .' requires. If you are sure to remove them - type:'. PHP_EOL . PHP_EOL .'  Qero.phar remove '. implode (' ', $this->settings['packages'][$package['full_path']]['requires']). PHP_EOL;
-
-        unset ($this->settings['packages'][$package['full_path']]);
+        unset ($this->packages[$packageInfo['full_path']]);
         
-        $this->updateSettings ();
         AutoloadGenerator::generateAutoload ();
 
         if ($delete)
@@ -259,17 +173,14 @@ class PackagesManager
      */
     public function updatePackages ()
     {
-        if (isset ($this->settings['packages']) && is_array ($this->settings['packages']))
+        $repos = array_unique (array_keys ($this->packages));
+        $alreadyInstalled = array ();
+
+        foreach ($repos as $repository)
         {
-            $repos = array_unique (array_keys ($this->settings['packages']));
-            $alreadyInstalled = array ();
+            $this->installPackage ($repository, $alreadyInstalled);
 
-            foreach ($repos as $repository)
-            {
-                $this->installPackage ($repository, $alreadyInstalled);
-
-                $alreadyInstalled[] = $repository;
-            }
+            $alreadyInstalled[] = $repository;
         }
     }
 
@@ -320,7 +231,7 @@ class PackagesManager
             $package = $this->getPackageBlocks ($package);
             $package = $package['full_path'];
 
-            if (!isset ($this->settings['packages'][$package]['requires']))
+            if (!isset ($this->packages[$package]->requires))
             {
                 if (array_search ($package, $requires) === false)
                     $requires[] = $package;
@@ -333,21 +244,13 @@ class PackagesManager
                     $requirement = $this->getPackageBlocks ($requirement);
 
                     return $requirement['full_path'];
-                }, $this->settings['packages'][$package]['requires']));
+                }, $this->packages[$package]->requires));
 
                 $requires[] = $package;
             }
         }
 
         return array_unique ($requires);
-    }
-
-    /**
-     * Обновление файла настроек
-     */
-    public function updateSettings ()
-    {
-        file_put_contents (QERO_DIR .'/qero-packages/qero-info.json', json_encode ($this->settings, defined ('JSON_PRETTY_PRINT') ? JSON_PRETTY_PRINT : 0));
     }
 
     /**
@@ -370,6 +273,7 @@ class PackagesManager
             'source'    => $source,
             'author'    => $info[0],
             'name'      => isset ($info[1]) ? $info[1] : '',
+            'version'   => null,
             'full_name' => implode ('/', $info),
             'full_path' => $source .':'. implode ('/', $info)
         );

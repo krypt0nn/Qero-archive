@@ -1,8 +1,7 @@
 <?php
 
-namespace Qero\Requester;
+namespace Qero;
 
-use Qero\Printer\Printer;
 use ProgressBar\ProgressBar;
 
 class Requester

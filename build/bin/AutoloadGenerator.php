@@ -1,6 +1,6 @@
 <?php
 
-namespace Qero\AutoloadGenerator;
+namespace Qero;
 
 use ProgressBar\ProgressBar;
 
@@ -10,14 +10,11 @@ class AutoloadGenerator
     {
         global $controller;
 
-        $autoload  = '<?php'. QERO_AUTOGENERATE;
-        
-        $packages = isset ($controller->manager->settings['packages']) ?
-            $controller->manager->getRequires (array_keys ($controller->manager->settings['packages'])) :
-            array ();
-        
+        $autoload = '<?php'. QERO_AUTOGENERATE;
         $requires = '';
         $classes  = '';
+
+        $packages = $controller->manager->getRequires (array_keys ($controller->manager->packages));
 
         if (($size = sizeof ($packages)) > 0)
             $progressBar = new ProgressBar ($size, 48, '   Building... ');
@@ -26,7 +23,7 @@ class AutoloadGenerator
 
         foreach ($packages as $file)
         {
-            if (!isset ($controller->manager->settings['packages'][$file]))
+            if (!isset ($controller->manager->packages[$file]))
             {
                 if (isset ($progressBar))
                     $progressBar->update (++$i);
@@ -37,12 +34,12 @@ class AutoloadGenerator
             $baseFile = explode (':', $file);
             $baseFile = implode (':', array_slice ($baseFile, 1));
 
-            if (!isset ($controller->manager->settings['packages'][$file]['entry_point']))
-                foreach (self::getPHPClasses (QERO_DIR .'/qero-packages/'. ($tPath = $baseFile .'/'. $controller->manager->settings['packages'][$file]['folder'])) as $pathFile => $fileClasses)
+            if (!isset ($controller->manager->packages[$file]->entry_point))
+                foreach (self::getPHPClasses (QERO_DIR .'/qero-packages/'. ($tPath = $baseFile .'/'. $controller->manager->packages[$file]->basefolder)) as $pathFile => $fileClasses)
                     foreach ($fileClasses as $class)
                         $classes .= "'$class' => '$tPath/$pathFile',\n\t";
 
-            else $requires .= 'require \''. $baseFile .'/'. $controller->manager->settings['packages'][$file]['folder'] .'/'. $controller->manager->settings['packages'][$file]['entry_point'] ."';\n";
+            else $requires .= 'require \''. $baseFile .'/'. $controller->manager->packages[$file]->basefolder .'/'. $controller->manager->packages[$file]->entry_point ."';\n";
 
             if (isset ($progressBar))
                 $progressBar->update (++$i);
@@ -64,11 +61,11 @@ spl_autoload_register (function ($class) use ($classes)
         include __DIR__ .\'/\'. $classes[$class];
 });';
 
-        file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = ". ($size > 0 ? "array\n(\n\tarray ('". implode ("'),\n\tarray ('", array_map (function ($package) use ($controller)
+        file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = ". ($size > 0 ? "array\n(\n\tarray (". implode ("),\n\tarray (", array_map (function ($package) use ($controller)
         {
-            return "$package', '". (isset ($controller->manager->settings['packages'][$package]['version']) ? 
-                $controller->manager->settings['packages'][$package]['version'] : 'undefined');
-        }, $packages)) ."')\n);" : 'null;') ."\n");
+            return "'$package', ". ($controller->manager->packages[$package]->version !== null ?
+            '\''. $controller->manager->packages[$package]->version .'\'' : 'null');
+        }, $packages)) .")\n);" : 'null;') ."\n");
     }
 
     public static function getPHPClasses ($file)

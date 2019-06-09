@@ -1,30 +1,29 @@
 <?php
 
-namespace Qero\Sources\GitHub;
-use Qero\Sources\Source;
-use Qero\Requester\Requester;
+namespace Qero\Sources;
+
+use Qero\Requester;
 
 class GitHub implements Source
 {
     static $watermark = 'sha';
+    public $package;
 
-    public static function getPackageInfo ($package)
+    public function __construct ($package, $version = null)
     {
-        return json_decode (@Requester::getRequest ('https://api.github.com/repos/'. $package), true);
+        $this->package = $package;
     }
 
-    public static function getPackageCommit ($package)
+    public function getPackageCommit ()
     {
-        $commit = json_decode (@Requester::getRequest ('https://api.github.com/repos/'. $package .'/commits'), true);
+        $commits = json_decode (@Requester::getRequest ('https://api.github.com/repos/'. $this->package .'/commits'), true);
 
-        return isset ($commit[0]) ?
-            $commit[0] : false;
+        return isset ($commits[0]) ?
+            $commits[0] : false;
     }
 
-    public static function getPackageArchive ($package)
+    public function getPackageArchive ()
     {
-        return @Requester::getRequest ('https://api.github.com/repos/'. $package .'/tarball', true);
+        return @Requester::getRequest ('https://api.github.com/repos/'. $this->package .'/tarball', true);
     }
 }
-
-?>

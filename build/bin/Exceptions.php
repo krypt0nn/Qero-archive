@@ -1,8 +1,6 @@
 <?php
 
-namespace Qero\Exceptions;
-
-use Qero\Printer\Printer;
+namespace Qero;
 
 class Exception extends \Exception {}
 

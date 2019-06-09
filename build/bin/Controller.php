@@ -1,11 +1,6 @@
 <?php
 
-namespace Qero\Controller;
-
-use Qero\Exceptions\Exception;
-use Qero\Printer\Printer;
-use Qero\PackagesManager\PackagesManager;
-use Qero\AutoloadGenerator\AutoloadGenerator;
+namespace Qero;
 
 define ('QERO_HEADER', '
 '. Printer::color ("\x1b[36;1m") .'
@@ -111,7 +106,7 @@ class Controller
             break;
 
             case 'update':
-                if (isset ($this->manager->settings['packages']) && sizeof ($this->manager->settings['packages']) > 0)
+                if (sizeof ($this->manager->packages) > 0)
                 {
                     $this->manager->updatePackages ();
 
@@ -125,9 +120,10 @@ class Controller
                 if (file_exists ($qero = QERO_DIR .'/'. ($qeroDir = 'qero-'. substr (sha1 (microtime (true) . rand (1, 9999999999)), 0, 8)) .'.tar'))
                     unlink ($qero);
 
-                file_put_contents ($qero, \Qero\Sources\GitHub\GitHub::getPackageArchive ('KRypt0nn/Qero'));
+                $archive = new \Qero\Sources\GitHub ('KRypt0nn/Qero');
+                file_put_contents ($qero, $archive->getPackageArchive ());
 
-                \Qero\dir_delete ($qeroDir = QERO_DIR .'/'. $qeroDir);
+                dir_delete ($qeroDir = QERO_DIR .'/'. $qeroDir);
                 mkdir ($qeroDir);
 
                 Printer::say ('  Unpacking...');
@@ -146,25 +142,25 @@ class Controller
                     }
 
                 (new \Phar ('Qero.phar'))->buildFromDirectory ($qeroDir .'/build');
-                \Qero\dir_delete (dirname ($qeroDir));
+                dir_delete (dirname ($qeroDir));
 
                 Printer::say (PHP_EOL . Printer::color ("\x1b[32;1m") .'Upgrading completed'. Printer::color ("\x1b[0m"));
             break;
 
             case 'packages':
-                if (isset ($this->manager->settings['packages']) && sizeof ($this->manager->settings['packages']) > 0)
+                if (isset ($this->manager->packages) && sizeof ($this->manager->packages) > 0)
                     Printer::say ('Installed packages:'. PHP_EOL . PHP_EOL . implode (PHP_EOL, array_map (function ($package)
                     {
-                        return ' - '. (isset ($this->manager->settings['packages'][$package]['version']) ?
-                            Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' (version: '. $this->manager->settings['packages'][$package]['version'] .')' :
+                        return ' - '. (isset ($this->manager->packages[$package]->version) ?
+                            Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m") .' (version: '. $this->manager->packages[$package]->version .')' :
                             Printer::color ("\x1b[33;1m") . $package . Printer::color ("\x1b[0m"));
-                    }, array_keys ($this->manager->settings['packages']))));
+                    }, array_keys ($this->manager->packages))));
 
                 else Printer::say ('No one package installed', 2);
             break;
 
             case 'rebuild':
-                if (!isset ($this->manager->settings['packages']) || sizeof ($this->manager->settings['packages']) == 0)
+                if (!isset ($this->manager->packages) || sizeof ($this->manager->packages) == 0)
                     Printer::say ('No one package installed'. PHP_EOL, 2);
 
                 Printer::say ('Rebuilding "autoload.php"...');
@@ -172,6 +168,19 @@ class Controller
             break;
 
             default:
+                if (file_exists (QERO_DIR .'/qero-info.json'))
+                {
+                    $info = json_decode (file_get_contents ('qero-info.json'), true);
+
+                    if (isset ($info['scripts'][$args[1]]))
+                    {
+                        Printer::say ('> '. $info['scripts'][$args[1]]);
+                        Printer::say (shell_exec ($info['scripts'][$args[1]]));
+
+                        return;
+                    }
+                }
+                
                 Printer::say ('Using unknown command "'. $args[1] .'"', 1);
             break;
         }

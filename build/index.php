@@ -22,66 +22,27 @@
 
 namespace Qero;
 
-define ('QERO_VERSION', '2.9.2');
-
-date_default_timezone_set ('UTC');
-
-/**
- * Рекурсивное удаление директории и всех последующих директорий и файлов
- * 
- * @param string $path - директория для удаления
- */
-function dir_delete ($path)
-{
-    if (!is_dir ($path))
-        return false;
-
-    foreach (array_slice (scandir ($path), 2) as $file)
-        if (is_dir ($file = $path .'/'. $file))
-        {
-            dir_delete ($file);
-
-            if (is_dir ($file))
-                rmdir ($file);
-        }
-
-        else unlink ($file);
-
-    rmdir ($path);
-
-    return true;
-}
-
+define ('QERO_VERSION', '3.0.0');
 define ('QERO_DIR', dirname (substr (__DIR__, 0, 7) == 'phar://' ? substr (__DIR__, 7) : __DIR__));
 
 if (!is_dir (QERO_DIR .'/qero-packages'))
     mkdir (QERO_DIR .'/qero-packages');
 
 require 'exts/ProgressBar.php';
+require 'bin/Others.php';
 require 'bin/Printer.php';
 require 'bin/Exceptions.php';
-require 'bin/Controller.php';
 require 'bin/Requester.php';
-require 'sources/SourceInterface.php';
+require 'sources/Source.php';
 require 'sources/GitHub.php';
 require 'sources/GitLab.php';
 require 'sources/BitBucket.php';
+require 'bin/Package.php';
+require 'bin/Controller.php';
 require 'bin/AutoloadGenerator.php';
 require 'bin/PackagesManager.php';
 
-use Qero\Printer\Printer;
-use Qero\Controller\Controller;
-
-if ($argv[0] != basename (__DIR__))
-{
-    Printer::$print = false;
-
-    fclose (STDOUT);
-    fclose (STDERR);
-}
-
 global $controller;
-
 $controller = new Controller;
 
 if ($argc <= 1)

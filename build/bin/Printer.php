@@ -1,10 +1,9 @@
 <?php
 
-namespace Qero\Printer;
+namespace Qero;
 
 class Printer
 {
-    static $print = true;
     static $canUseColors = null;
 
     /**
@@ -15,23 +14,21 @@ class Printer
      *   0 - стандартное
      *   1 - ошибка
      *   2 - информация
-     * 
-     *   default value: 0
      */
     public static function say ($message, $state = 0)
     {
-        if (defined ('STDOUT') && defined ('STDERR') && self::$print)
+        if (defined ('STDOUT') && defined ('STDERR'))
         {
             $message = str_replace ("\n", "\n ", $message);
 
             switch ($state)
             {
                 case 1:
-                    fwrite (STDERR, self::color ("\x1b[31;1m") .' [!]'. self::color ("\x1b[0m") ." $message" .PHP_EOL);
+                    fwrite (STDERR, self::color ("\x1b[31;1m") .' [!]'. self::color ("\x1b[0m") .' '. $message . PHP_EOL);
                 break;
 
                 case 2:
-                    fwrite (STDOUT, self::color ("\x1b[33;1m") .' [*]'. self::color ("\x1b[0m") ." $message" .PHP_EOL);
+                    fwrite (STDOUT, self::color ("\x1b[33;1m") .' [*]'. self::color ("\x1b[0m") .' '. $message . PHP_EOL);
                 break;
 
                 case 0:

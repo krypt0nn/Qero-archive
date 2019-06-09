@@ -1,30 +1,29 @@
 <?php
 
-namespace Qero\Sources\BitBucket;
-use Qero\Sources\Source;
-use Qero\Requester\Requester;
+namespace Qero\Sources;
+
+use Qero\Requester;
 
 class BitBucket implements Source
 {
     static $watermark = 'hash';
-    
-    public static function getPackageInfo ($package)
+    public $package;
+
+    public function __construct ($package, $version = null)
     {
-        return json_decode (@Requester::getRequest ('https://api.bitbucket.org/2.0/repositories/'. $package), true);
+        $this->package = $package;
     }
 
-    public static function getPackageCommit ($package)
+    public function getPackageCommit ()
     {
-        $commit = json_decode (@Requester::getRequest ('https://api.bitbucket.org/2.0/repositories/'. $package .'/commits'), true);
+        $commits = json_decode (@Requester::getRequest ('https://api.bitbucket.org/2.0/repositories/'. $this->package .'/commits'), true);
 
-        return isset ($commit['values'][0]) ?
-            $commit['values'][0] : false;
+        return isset ($commits['values'][0]) ?
+            $commits['values'][0] : false;
     }
 
-    public static function getPackageArchive ($package)
+    public function getPackageArchive ()
     {
-        return @Requester::getRequest ('https://bitbucket.org/'. $package .'/get/master.tar.gz', true);
+        return @Requester::getRequest ('https://bitbucket.org/'. $this->package .'/get/master.tar.gz', true);
     }
 }
-
-?>
