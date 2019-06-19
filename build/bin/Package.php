@@ -62,7 +62,6 @@ class Package
         if ($folder === null)
             $folder = QERO_DIR .'/qero-packages';
 
-        $this->getCommit ();
         $this->watermark = $this->commit[$this->source::$watermark];
 
         if (is_dir ($folder .'/'. $this->name))
@@ -129,10 +128,8 @@ class Package
 
     public function getCommit ()
     {
-        $this->commit = $this->source->getPackageCommit ();
-
         if ($this->commit === null)
-            throw new Exception ('Package '. Printer::color ("\x1b[33;1m") . $this->name . Printer::color ("\x1b[0m") .' not founded');
+            $this->commit = $this->source->getPackageCommit ();
 
         return $this->commit;
     }

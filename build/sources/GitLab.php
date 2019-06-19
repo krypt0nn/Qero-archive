@@ -39,7 +39,8 @@ class GitLab implements Source
     {
         $commits = json_decode (@Requester::getRequest ('https://gitlab.com/api/v4/projects/'. $this->package_id .'/repository/commits'), true);
 
-        return $commits[0];
+        return isset ($commits[0]) ?
+            $commits[0] : false;
     }
 
     public function getPackageArchive ()

@@ -84,16 +84,23 @@ class PackagesManager
 
         $commit = $package->getCommit ();
 
+        if ($commit === false)
+        {
+            Printer::say ('Package '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .' not founded'. PHP_EOL, 1);
+
+            return false;
+        }
+
         if (isset ($this->packages[$packageInfo['full_path']]))
         {
             if ($commit[$source::$watermark] == $this->packages[$packageInfo['full_path']]->watermark)
             {
-                Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .' already installed. Skipping...'. PHP_EOL, 2);
+                Printer::say ('Package '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .' already installed. Skipping...'. PHP_EOL, 2);
 
                 return false;
             }
 
-            else Printer::say ('Repository '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .' already installed, but version is outdated. Updating...'. PHP_EOL, 2);
+            else Printer::say ('Package '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .' already installed, but version is outdated. Updating...'. PHP_EOL, 2);
         }
 
         Printer::say ('Installing '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .'...');
