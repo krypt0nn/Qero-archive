@@ -35,13 +35,14 @@ define ('QERO_HELP', '
     Example: Qero.phar install php-ai/php-ml
 
     Commands:
-        help                   - print Qero commands list
-        install [*repos list]  - downloading repositories to the folder
-        remove [packages list] - remove installed packages (with package source)
-        update                 - updating (re-installing) all installed packages
-        packages               - print installed packages list
-        rebuild                - rebuild "qero-packages/autoload.php" file
-        upgrade                - upgrade Qero to actual version
+        help                      - print Qero commands list
+        install [*packages list]  - installing packages
+        download [*packages list] - downloading package to the main directory
+        remove [packages list]    - remove installed packages (with package source)
+        update                    - updating (re-installing) all installed packages
+        packages                  - print installed packages list
+        rebuild                   - rebuild "qero-packages/autoload.php" file
+        upgrade                   - upgrade Qero to actual version
 
 ');
 
@@ -82,13 +83,23 @@ class Controller
                             $args = array_merge ($args, $info['requires']);
                     }
 
-                    else throw new Exception ('Installing repository isn\'t selected');
+                    else throw new Exception ('Installing package isn\'t selected');
                 }
 
                 foreach (array_slice ($args, 2) as $repository)
                     $this->manager->installPackage ($repository);
 
                 Printer::say (Printer::color ("\n\x1b[32;1m") .'Installing completed'. Printer::color ("\x1b[0m"));
+            break;
+
+            case 'download':
+                if ($argc < 3)
+                    throw new Exception ('Downloading package isn\'t selected');
+
+                foreach (array_slice ($args, 2) as $repository)
+                    $this->manager->downloadPackage ($repository);
+
+                Printer::say (Printer::color ("\n\x1b[32;1m") .'Downloading completed'. Printer::color ("\x1b[0m"));
             break;
 
             case 'remove':

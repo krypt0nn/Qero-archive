@@ -33,6 +33,9 @@ class PackagesManager
 
     public function __construct ()
     {
+        if (!is_dir (QERO_DIR .'/qero-packages'))
+            mkdir (QERO_DIR .'/qero-packages');
+
         $packages = file_exists (QERO_DIR .'/qero-packages/packages.json') ?
             json_decode (file_get_contents (QERO_DIR .'/qero-packages/packages.json'), true) : array ();
 
@@ -136,6 +139,61 @@ class PackagesManager
 
         if ($package->after_install !== null)
             @require_once QERO_DIR .'/qero-packages/'. $package->name .'/'. $package->basefolder .'/'. $package->after_install;
+    }
+
+    /**
+     * Скачивание пакета
+     * 
+     * @param string $package - полное название пакета
+     * 
+     * @return bool - возвращает статус скачивания пакета
+     */
+    public function downloadPackage ($package)
+    {
+        $packageInfo = $this->getPackageBlocks ($package);
+
+        switch ($packageInfo['source'])
+        {
+            case 'github':
+                $source = 'Qero\Sources\GitHub';
+            break;
+
+            case 'gitlab':
+                $source = 'Qero\Sources\GitLab';
+            break;
+
+            case 'bitbucket':
+                $source = 'Qero\Sources\BitBucket';
+            break;
+
+            default:
+                Printer::say ('Source '. Printer::color ("\x1b[33;1m") . $packageInfo['source'] . Printer::color ("\x1b[0m") .' not founded. Skipping...'. PHP_EOL, 1);
+
+                return false;
+            break;
+        }
+
+        $package = new Package (array (
+            'name'      => $packageInfo['full_name'],
+            'full_name' => $packageInfo['full_path'],
+            'version'   => $packageInfo['version'],
+            'source'    => new $source ($packageInfo['full_name'])
+        ));
+
+        $commit = $package->getCommit ();
+
+        if ($commit === false)
+        {
+            Printer::say ('Package '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .' not founded'. PHP_EOL, 1);
+
+            return false;
+        }
+
+        Printer::say ('Downloading '. Printer::color ("\x1b[33;1m") . $package->name . Printer::color ("\x1b[0m") .'...');
+
+        $package = $package->download (QERO_DIR);
+
+        return true;
     }
 
     /**

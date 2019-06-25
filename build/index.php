@@ -22,11 +22,8 @@
 
 namespace Qero;
 
-define ('QERO_VERSION', '3.1.0');
+define ('QERO_VERSION', '3.2');
 define ('QERO_DIR', dirname (substr (__DIR__, 0, 7) == 'phar://' ? substr (__DIR__, 7) : __DIR__));
-
-if (!is_dir (QERO_DIR .'/qero-packages'))
-    mkdir (QERO_DIR .'/qero-packages');
 
 require 'exts/ProgressBar.php';
 require 'bin/Others.php';
