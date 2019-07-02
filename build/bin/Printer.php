@@ -33,7 +33,7 @@ class Printer
 
                 case 0:
                 default:
-                    fwrite (STDOUT, ' '. $message .PHP_EOL);
+                    fwrite (STDOUT, ' '. $message . PHP_EOL);
                 break;
             }
         }

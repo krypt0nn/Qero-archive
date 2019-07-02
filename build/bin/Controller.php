@@ -152,7 +152,8 @@ class Controller
                         break;
                     }
 
-                (new \Phar ('Qero.phar'))->buildFromDirectory ($qeroDir .'/build');
+                $phar = new \Phar ('Qero.phar');
+                $phar->buildFromDirectory ($qeroDir .'/build');
                 dir_delete (dirname ($qeroDir));
 
                 Printer::say (PHP_EOL . Printer::color ("\x1b[32;1m") .'Upgrading completed'. Printer::color ("\x1b[0m"));

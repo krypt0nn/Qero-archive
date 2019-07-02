@@ -36,6 +36,16 @@ class PackagesManager
         if (!is_dir (QERO_DIR .'/qero-packages'))
             mkdir (QERO_DIR .'/qero-packages');
 
+        $this->updateManager ();
+    }
+
+    /**
+     * Обновление локальных переменных менеджера
+     */
+    public function updateManager ()
+    {
+        $this->packages = array ();
+        
         $packages = file_exists (QERO_DIR .'/qero-packages/packages.json') ?
             json_decode (file_get_contents (QERO_DIR .'/qero-packages/packages.json'), true) : array ();
 
@@ -69,7 +79,7 @@ class PackagesManager
             break;
 
             default:
-                Printer::say ('Source '. Printer::color ("\x1b[33;1m"). $packageInfo['source'] .Printer::color ("\x1b[0m") .' not founded. Skipping...'. PHP_EOL, 1);
+                Printer::say ('Source '. Printer::color ("\x1b[33;1m") . $packageInfo['source'] . Printer::color ("\x1b[0m") .' not founded. Skipping...'. PHP_EOL, 1);
 
                 return false;
             break;

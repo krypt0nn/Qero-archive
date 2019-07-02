@@ -33,8 +33,9 @@ php Qero.phar help
 Команда | Аргументы | Описание
 --------|-----------|----------
 **help** | - | Вывод списка доступных команд
-**install** | [*список пакетов] | Установка пакетов. Вы так же можете оставить список пустым, если рядом есть файл *qero-info.json*: тогда Qero загрузит зависимости
-**remove** | [*список пакетов] | Удаление пакетов *(с указанием источника пакета)*
+**install** | [список пакетов] | Установка пакетов. Вы так же можете оставить список пустым, если рядом есть файл *qero-info.json*: тогда Qero загрузит зависимости
+**download** | [список пакетов] | Скачивание пакетов в текущую директорию
+**remove** | [список пакетов] | Удаление пакетов *(с указанием источника пакета)*
 **update** | - | Обновление *(переустановка)* пакетов
 **packages** | - | Вывод списка установленных пакетов
 **rebuild** | - | Перестройка файла "*qero-packages/autoload.php*"
@@ -93,7 +94,7 @@ echo $classifier->predict([3, 2]);
 
 require 'Qero.phar';
 
-use Qero\PackagesManager\PackagesManager;
+use Qero\PackagesManager;
 
 $manager = new PackagesManager;
 $manager->installPackage ('KRypt0nn/TreeStructure');
@@ -113,7 +114,7 @@ $tree = new Tree;
 
 require 'Qero.phar';
 
-use Qero\PackagesManager\PackagesManager;
+use Qero\PackagesManager;
 
 $manager = new PackagesManager;
 $manager->updatePackages ();

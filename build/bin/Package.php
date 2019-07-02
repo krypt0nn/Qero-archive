@@ -62,7 +62,8 @@ class Package
         if ($folder === null)
             $folder = QERO_DIR .'/qero-packages';
 
-        $this->watermark = $this->commit[$this->source::$watermark];
+        $source = $this->source;
+        $this->watermark = $this->commit[$source::$watermark];
 
         if (is_dir ($folder .'/'. $this->name))
             foreach (array_slice (scandir ($folder .'/'. $this->name), 2) as $dir)
@@ -74,7 +75,7 @@ class Package
                 }
         
         if (!is_dir ($folder .'/'. $this->name .'/'. $this->basefolder))
-            $this->basefolder = str_replace ('/', '-', $this->name) .'-'. substr ($this->commit[$this->source::$watermark], 0, 7);
+            $this->basefolder = str_replace ('/', '-', $this->name) .'-'. substr ($this->commit[$source::$watermark], 0, 7);
 
         if (file_exists ($folder .'/'. $this->name .'/'. $this->basefolder .'/qero-info.json'))
             foreach (json_decode (file_get_contents ($folder .'/'. $this->name .'/'. $this->basefolder .'/qero-info.json'), true) as $name => $value)

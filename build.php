@@ -4,8 +4,9 @@ ini_set ('phar.readonly', 0);
 date_default_timezone_set ('UTC');
 
 $begin = microtime (true);
+$phar  = new Phar ('Qero.phar');
 
-(new Phar ('Qero.phar'))->buildFromDirectory ('build');
+$phar->buildFromDirectory ('build');
 
 fwrite (STDOUT, '
 

@@ -29,8 +29,9 @@ class Requester
                 CURLOPT_SSL_VERIFYPEER => false,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_NOPROGRESS     => false,
+                CURLOPT_SSLVERSION     => 4,
 
-                CURLOPT_PROGRESSFUNCTION => function ($t, $download_size, $downloaded, $upload_size, $uploaded) use (&$progressBar)
+                CURLOPT_PROGRESSFUNCTION => function ($t, $download_size, $downloaded) use (&$progressBar)
                 {
                     if ($progressBar)
                         $progressBar->update ((int)($downloaded / $download_size * 100));
@@ -58,14 +59,16 @@ class Requester
         return file_get_contents ($url, false, stream_context_create (array (
             'ssl' => array
             (
-                'verify_peer'      => false,
-                'verify_peer_name' => false
+                'verify_peer'       => false,
+                'verify_peer_name'  => false,
+                'allow_self_signed' => true
             ),
 
             'http' => array
             (
                 'method' => 'GET',
-                'header' => array ('User-Agent: PHP')
+                'header' => array ('User-Agent: PHP'),
+                'follow_location' => true
             )
         )));
     }
