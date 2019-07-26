@@ -63,8 +63,9 @@ spl_autoload_register (function ($class) use ($classes)
 
         file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = ". ($size > 0 ? "array\n(\n\tarray (". implode ("),\n\tarray (", array_map (function ($package) use ($controller)
         {
-            return "'$package', ". ($controller->manager->packages[$package]->version !== null ?
-            '\''. $controller->manager->packages[$package]->version .'\'' : 'null');
+			if (isset ($controller->manager->packages[$package]))
+				return "'$package', ". ($controller->manager->packages[$package]->version !== null ?
+					'\''. $controller->manager->packages[$package]->version .'\'' : 'null');
         }, $packages)) .")\n);" : 'null;') ."\n");
     }
 
