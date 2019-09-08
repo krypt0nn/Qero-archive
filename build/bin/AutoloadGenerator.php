@@ -48,7 +48,7 @@ class AutoloadGenerator
         if (isset ($progressBar))
             fwrite (STDOUT, PHP_EOL . PHP_EOL);
 
-        $autoload .= $requires . strlen ($classes) > 3 ? '
+        $autoload .= $requires .'
 
 $classes = array
 (
@@ -59,7 +59,7 @@ spl_autoload_register (function ($class) use ($classes)
 {
     if (isset ($classes[$class]))
         include __DIR__ .\'/\'. $classes[$class];
-});' : '';
+});';
 
         file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = ". ($size > 0 ? "array\n(\n\tarray (". implode ("),\n\tarray (", array_map (function ($package) use ($controller)
         {
