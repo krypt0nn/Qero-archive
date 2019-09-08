@@ -14,8 +14,6 @@ class Package
     public $entry_point;
     public $after_install;
     public $scripts;
-
-    public $basefolder;
     public $watermark;
 
     protected $commit;
@@ -42,17 +40,21 @@ class Package
             $folder = QERO_DIR .'/qero-packages';
 
         dir_delete ($folder .'/'. $this->name);
-        mkdir ($folder .'/'. $this->name, 0777, true);
 
-        file_put_contents ($folder .'/'. $this->name .'/branch.tar', $this->source->getPackageArchive ());
+        if (!is_dir ($branch = dirname ($folder .'/'. $this->name)))
+            mkdir ($branch, 0777, true);
+
+        file_put_contents ($branch .'/branch.tar', $this->source->getPackageArchive ());
 
         Printer::say ('  Unpacking...');
 
-        $archive = new \PharData ($folder .'/'. $this->name .'/branch.tar');
-        $archive->extractTo ($folder .'/'. $this->name, null, true);
+        $archive = new \PharData ($branch .'/branch.tar');
+        $archive->extractTo ($branch, null, true);
+
+        rename ($branch .'/'. $archive->current ()->getFilename (), $folder .'/'. $this->name);
 
         unset ($archive);
-        \PharData::unlinkArchive ($folder .'/'. $this->name .'/branch.tar');
+        \PharData::unlinkArchive ($branch .'/branch.tar');
 
         return $this;
     }
@@ -65,20 +67,8 @@ class Package
         $source = $this->source;
         $this->watermark = $this->commit[$source::$watermark];
 
-        if (is_dir ($folder .'/'. $this->name))
-            foreach (array_slice (scandir ($folder .'/'. $this->name), 2) as $dir)
-                if (is_dir ($folder .'/'. $this->name .'/'. $dir))
-                {
-                    $this->basefolder = $dir;
-
-                    break;
-                }
-        
-        if (!is_dir ($folder .'/'. $this->name .'/'. $this->basefolder))
-            $this->basefolder = str_replace ('/', '-', $this->name) .'-'. substr ($this->commit[$source::$watermark], 0, 7);
-
-        if (file_exists ($folder .'/'. $this->name .'/'. $this->basefolder .'/qero-info.json'))
-            foreach (json_decode (file_get_contents ($folder .'/'. $this->name .'/'. $this->basefolder .'/qero-info.json'), true) as $name => $value)
+        if (file_exists ($folder .'/'. $this->name .'/qero-info.json'))
+            foreach (json_decode (file_get_contents ($folder .'/'. $this->name .'/qero-info.json'), true) as $name => $value)
                 $this->$name = $value;
 
         if ($this->entry_point === null)
@@ -87,7 +77,7 @@ class Package
             $name = end ($name);
             
             foreach (array_merge (array ($name .'.php'), $this->enteringPoints) as $entryPoint)
-                if (file_exists ($folder .'/'. $this->name .'/'. $this->basefolder .'/'. $entryPoint))
+                if (file_exists ($folder .'/'. $this->name .'/'. $entryPoint))
                 {
                     $this->entry_point = $entryPoint;
 

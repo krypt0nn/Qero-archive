@@ -175,7 +175,7 @@ class Controller
                 if (!isset ($this->manager->packages) || sizeof ($this->manager->packages) == 0)
                     Printer::say ('No one package installed'. PHP_EOL, 2);
 
-                Printer::say ('Rebuilding "autoload.php"...');
+                Printer::say ('Rebuilding '. Printer::color ("\x1b[33;1m") .'autoload.php'. Printer::color ("\x1b[0m") .'...');
                 AutoloadGenerator::generateAutoload ();
             break;
 

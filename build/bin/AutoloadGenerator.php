@@ -35,11 +35,11 @@ class AutoloadGenerator
             $baseFile = implode (':', array_slice ($baseFile, 1));
 
             if (!isset ($controller->manager->packages[$file]->entry_point))
-                foreach (self::getPHPClasses (QERO_DIR .'/qero-packages/'. ($tPath = $baseFile .'/'. $controller->manager->packages[$file]->basefolder)) as $pathFile => $fileClasses)
+                foreach (self::getPHPClasses (QERO_DIR .'/qero-packages/'. $baseFile) as $pathFile => $fileClasses)
                     foreach ($fileClasses as $class)
-                        $classes .= "'$class' => '$tPath/$pathFile',\n\t";
+                        $classes .= "'$class' => '$baseFile/$pathFile',\n\t";
 
-            else $requires .= 'require \''. $baseFile .'/'. $controller->manager->packages[$file]->basefolder .'/'. $controller->manager->packages[$file]->entry_point ."';\n";
+            else $requires .= 'require \''. $baseFile .'/'. $controller->manager->packages[$file]->entry_point ."';\n";
 
             if (isset ($progressBar))
                 $progressBar->update (++$i);
@@ -48,7 +48,7 @@ class AutoloadGenerator
         if (isset ($progressBar))
             fwrite (STDOUT, PHP_EOL . PHP_EOL);
 
-        $autoload .= $requires .'
+        $autoload .= $requires . strlen ($classes) > 3 ? '
 
 $classes = array
 (
@@ -59,7 +59,7 @@ spl_autoload_register (function ($class) use ($classes)
 {
     if (isset ($classes[$class]))
         include __DIR__ .\'/\'. $classes[$class];
-});';
+});' : '';
 
         file_put_contents (QERO_DIR .'/qero-packages/autoload.php', $autoload ."\n\n\$required_packages = ". ($size > 0 ? "array\n(\n\tarray (". implode ("),\n\tarray (", array_map (function ($package) use ($controller)
         {
